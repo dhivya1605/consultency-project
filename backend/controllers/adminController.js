@@ -45,9 +45,10 @@ const getSalesAnalytics = async (req, res) => {
     ]);
 
     // Top products
-    const topProducts = await Product.find()
+    const topProducts = await Product.find({}, { name: 1, purchaseCount: 1, price: 1 })
       .sort({ purchaseCount: -1 })
-      .limit(10);
+      .limit(10)
+      .lean(); // Convert Mongoose documents to plain JavaScript objects
 
     // Total metrics
     const totalOrders = await Order.countDocuments();

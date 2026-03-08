@@ -74,7 +74,7 @@ const Cart = () => {
             <div key={productId} className="cart-item">
               <div className="item-info">
                 <h4>{productName}</h4>
-                <p>Price: ₹{Math.round(item.price * 83)}</p>
+                <p>Price: ₹{item.price}</p>
               </div>
               <div className="item-quantity">
                 <button onClick={() => handleQuantityChange(item.productId, item.quantity - 1)}>-</button>
@@ -86,7 +86,7 @@ const Cart = () => {
                 <button onClick={() => handleQuantityChange(item.productId, item.quantity + 1)}>+</button>
               </div>
               <div className="item-total">
-                ₹{Math.round(item.price * item.quantity * 83)}
+                ₹{item.price * item.quantity}
               </div>
               <button onClick={() => handleRemoveItem(item.productId)} className="remove-btn">Remove</button>
             </div>
@@ -94,7 +94,7 @@ const Cart = () => {
         })}
       </div>
       <div className="cart-summary">
-        <h3>Total: ₹{Math.round(cart.totalPrice * 83)}</h3>
+        <h3>Total: ₹{cart.totalPrice}</h3>
         <button onClick={handleCheckout} className="checkout-btn">Proceed to Checkout</button>
         <button onClick={clearCart} className="clear-btn">Clear Cart</button>
       </div>

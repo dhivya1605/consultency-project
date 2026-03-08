@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import RatingModal from './RatingModal';
 
 const OrderConfirmation = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const [orderData, setOrderData] = useState(null);
-  const [showRatingModal, setShowRatingModal] = useState(false);
 
   useEffect(() => {
     if (location.state?.orderData) {
       setOrderData(location.state.orderData);
-      // Show rating modal after 2 seconds
-      setTimeout(() => setShowRatingModal(true), 2000);
     } else {
       navigate('/');
     }
@@ -76,13 +72,13 @@ const OrderConfirmation = () => {
             {orderData.items && orderData.items.map((item, index) => (
               <div key={index} className="confirmation-item">
                 <span>{item.name || item.title}</span>
-                <span className="item-amount">₹{Math.round(item.price * 83)}</span>
+                <span className="item-amount">₹{item.price}</span>
               </div>
             ))}
           </div>
           <div className="total-amount">
             <span>Total Amount:</span>
-            <span>₹{Math.round(orderData.totalAmount * 83)}</span>
+            <span>₹{orderData.totalAmount}</span>
           </div>
         </div>
 
@@ -116,14 +112,6 @@ const OrderConfirmation = () => {
           <p>Need help? Contact us at support@sunelectronics.com or call 1-800-SUN-ELECTRONICS</p>
         </div>
       </div>
-
-      {showRatingModal && (
-        <RatingModal
-          orderId={orderData._id}
-          onClose={() => setShowRatingModal(false)}
-          onSubmit={() => alert('Thank you for your feedback!')}
-        />
-      )}
     </div>
   );
 };

@@ -13,10 +13,16 @@ const ProductSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['TVs', 'Laptops', 'Refrigerators', 'Washing Machines', 'Accessories']
+    // enum removed to allow custom categories (tv, ac, washing-machine, etc.)
+    // previously validation failed because UI sent values like 'tv' which
+    // didn't match the old enum names.
   },
   brand: String,
   image: String,
+  visible: {
+    type: Boolean,
+    default: true
+  },
   rating: {
     type: Number,
     default: 0,

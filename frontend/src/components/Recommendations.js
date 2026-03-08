@@ -45,7 +45,7 @@ const Recommendations = ({ productId }) => {
       <div className="recommendations-grid">
         {recommendations.map(product => (
           <div key={product._id} className="recommendation-card">
-            <img src={product.image} alt={product.name} />
+            <img src={product.image?.startsWith('http') ? product.image : `http://localhost:5000${product.image}`} alt={product.name} />
             <h4>{product.name}</h4>
             <p>₹{product.price}</p>
             <button className="add-to-cart-btn">Add to Cart</button>

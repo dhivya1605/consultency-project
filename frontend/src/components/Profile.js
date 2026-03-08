@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import RatingModal from './RatingModal';
 
 const Profile = () => {
   const { user, token, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showRatingModal, setShowRatingModal] = useState({ show: false });
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -17,6 +19,7 @@ const Profile = () => {
     if (user && token) {
       fetchOrders();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, token, authLoading, navigate]);
 
   const fetchOrders = async () => {
@@ -68,49 +71,41 @@ const Profile = () => {
             {orders.map(order => (
               <div key={order._id} className="order-card">
                 <div className="order-header">
-                  <div className="order-id">
-                    <strong>Order #{order._id.slice(-8)}</strong>
-                  </div>
-                  <div className="order-status">
-                    <span className={`status ${order.orderStatus.toLowerCase()}`}>
-                      {order.orderStatus}
-                    </span>
-                  </div>
+                  <h3>Order #{order._id}</h3>
+                  <p>Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                  <p>Total: ₹{order.total}</p>
+                  <p>Payment: {order.paymentMethod}</p>
+                  <p>Status: {order.status}</p>
                 </div>
-                
-                <div className="order-details">
-                  <p><strong>Date:</strong> {new Date(order.orderDate).toLocaleDateString()}</p>
-                  <p><strong>Total:</strong> ₹{Math.round(order.totalAmount * 83)}</p>
-                  <p><strong>Payment:</strong> {order.paymentMethod}</p>
-                  <p><strong>Status:</strong> {order.paymentStatus}</p>
-                </div>
-
                 <div className="order-items">
-                  <h4>Items ({order.items.length}):</h4>
-                  {order.items.map((item, index) => (
-                    <div key={index} className="order-item">
-                      <span className="item-name">{item.name}</span>
-                      <span className="item-details">
-                        Qty: {item.quantity} × ₹{Math.round(item.price * 83)}
-                      </span>
+                  <h4>Items:</h4>
+                  {order.items.map(item => (
+                    <div key={item.productId} className="order-item">
+                      <p>Product: {item.productName}</p>
+                      <p>Qty: {item.quantity} × ₹{item.price}</p>
+                      <button
+                        className="rate-btn"
+                        onClick={() => setShowRatingModal({ show: true, productId: item.productId, orderId: order._id })}
+                      >
+                        Rate Product
+                      </button>
                     </div>
                   ))}
                 </div>
-
-                {order.deliveryAddress && (
-                  <div className="delivery-address">
-                    <h4>Delivery Address:</h4>
-                    <p>{order.deliveryAddress}</p>
-                  </div>
-                )}
-
-                {order.estimatedDelivery && (
-                  <div className="estimated-delivery">
-                    <p><strong>Estimated Delivery:</strong> {new Date(order.estimatedDelivery).toLocaleDateString()}</p>
-                  </div>
-                )}
               </div>
             ))}
+
+            {showRatingModal.show && (
+              <RatingModal
+                orderId={showRatingModal.orderId}
+                productId={showRatingModal.productId}
+                onClose={() => setShowRatingModal({ show: false })}
+                onSubmit={() => {
+                  setShowRatingModal({ show: false });
+                  fetchOrders(); // Refresh orders after rating
+                }}
+              />
+            )}
           </div>
         )}
       </div>

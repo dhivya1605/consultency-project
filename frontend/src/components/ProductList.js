@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getProducts } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -7,108 +9,81 @@ const ProductList = () => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
     category: '',
+    brand: '',
     search: '',
     sort: ''
   });
 
+
+  const { user } = useAuth();
+
   useEffect(() => {
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters]);
+  }, [filters, user]);
 
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      // Fetch all products from fakestoreapi
-      const response = await fetch('https://fakestoreapi.com/products/category/electronics');
-      const data = await response.json();
+      const params = {};
+      if (filters.category && filters.category !== 'all') params.category = filters.category;
+      if (filters.brand && filters.brand !== 'all') params.brand = filters.brand;
+      if (filters.search) params.search = filters.search;
+      if (filters.sort) params.sort = filters.sort;
+      if (user?.role === 'admin') params.admin = true;
 
-      // Categorize products by keywords
-      const categories = [
-
-        { name: 'washing', label: '🧺 Washing Machine', keywords: ['washing', 'machine', 'laundry'] },
-        { name: 'tv', label: '📺 TV', keywords: ['television', 'tv', 'screen'] },
-        { name: 'fridge', label: '🧊 Fridge', keywords: ['refrigerator', 'fridge', 'cooler'] },
-        { name: 'fan', label: '🌀 Fan', keywords: ['fan', 'cooling'] },
-        { name: 'light', label: '💡 Light', keywords: ['light', 'bulb', 'lighting', 'lamp'] },
-        { name: 'ac', label: '❄️ AC', keywords: ['air conditioner', 'ac', 'conditioning'] },
-        { name: 'microwave', label: '🔥 Microwave Oven', keywords: ['microwave', 'oven'] },
-        { name: 'stabilizer', label: '⚡ Stabilizer', keywords: ['stabilizer', 'power', 'surge'] }
-      ];
-
-      let allProducts = [];
-
-      // Categorize each product
-      data.forEach(product => {
-        const titleLower = product.title.toLowerCase();
-        const descLower = product.description.toLowerCase();
-        
-        categories.forEach(category => {
-          const matches = category.keywords.some(keyword => 
-            titleLower.includes(keyword) || descLower.includes(keyword)
-          );
-          
-          if (matches) {
-            allProducts.push({
-              ...product,
-              categoryType: category.name,
-              categoryLabel: category.label
-            });
-          }
-        });
-      });
-
-      // If no products found in categories, add all products
-      if (allProducts.length === 0) {
-        allProducts = data.map(p => ({
-          ...p,
-          categoryType: 'all',
-          categoryLabel: 'All Products'
-        }));
-      }
-
-      // Filter by selected category
-      let processedProducts = allProducts;
-      if (filters.category !== '' && filters.category !== 'all') {
-        processedProducts = processedProducts.filter(p => p.categoryType === filters.category);
-      }
-
-      // Filter by search
-      if (filters.search) {
-        processedProducts = processedProducts.filter(p => 
-          p.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-          p.description.toLowerCase().includes(filters.search.toLowerCase())
-        );
-      }
-
-      // Sort products
-      if (filters.sort === 'price-asc') {
-        processedProducts.sort((a, b) => a.price - b.price);
-      } else if (filters.sort === 'price-desc') {
-        processedProducts.sort((a, b) => b.price - a.price);
-      } else if (filters.sort === 'rating') {
-        processedProducts.sort((a, b) => (b.rating?.rate || 0) - (a.rating?.rate || 0));
-      }
-
-      setProducts(processedProducts);
+      const response = await getProducts(params);
+      const data = response.data.products || [];
+      const unique = Array.from(new Map(data.map(p => [p._id, p])).values());
+      setProducts(unique);
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
       setLoading(false);
     }
-  };
+  };  
+
+
+
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    if (name === 'category') {
+      // Reset brand when category changes
+      setFilters(prev => ({
+        ...prev,
+        [name]: value,
+        brand: ''
+      }));
+    } else {
+      setFilters(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
+
+  // Get available brands based on selected category
+  const availableBrands = {
+    'Grinder': ['Preethi', 'Philips', 'Havells', 'Butterfly', 'Bajaj'],
+    'TV': ['Samsung', 'LG', 'Sony', 'TCL', 'Panasonic', 'OnePlus'],
+    'Washing Machine': ['Samsung', 'LG', 'IFB', 'Bosch', 'Whirlpool', 'Godrej'],
+    'Fridge': ['Samsung', 'LG', 'Whirlpool', 'Godrej', 'Haier', 'Voltas'],
+    'Fan': ['Havells', 'Usha', 'Philips', 'Bajaj', 'Orient', 'Crompton'],
+    'Microwave': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch']
+  }[filters.category] || [];
 
   const handleImageError = (e) => {
     // Fallback image if the original fails to load
     e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23ddd" width="200" height="200"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999" font-size="16"%3ENo Image%3C/text%3E%3C/svg%3E';
+  };
+
+  const getImageUrl = (image) => {
+    if (!image) return null;
+    // If image starts with http, it's already a full URL
+    if (image.startsWith('http')) return image;
+    // Otherwise, construct full backend URL
+    return `http://localhost:5000${image}`;
   };
 
   return (
@@ -123,16 +98,18 @@ const ProductList = () => {
         />
         <select name="category" value={filters.category} onChange={handleFilterChange}>
           <option value="">All Categories</option>
-          <option value="mixer">🥣 Mixer</option>
-          <option value="grinder">⚙️ Grinder</option>
-          <option value="washing">🧺 Washing Machine</option>
-          <option value="tv">📺 TV</option>
-          <option value="fridge">🧊 Fridge</option>
-          <option value="fan">🌀 Fan</option>
-          <option value="light">💡 Light</option>
-          <option value="ac">❄️ AC</option>
-          <option value="microwave">🔥 Microwave Oven</option>
-          <option value="stabilizer">⚡ Stabilizer</option>
+          <option value="Grinder">🔧 Grinder</option>
+          <option value="TV">📺 TV</option>
+          <option value="Washing Machine">🧺 Washing Machine</option>
+          <option value="Fridge">❄️ Fridge</option>
+          <option value="Fan">🌀 Fan</option>
+          <option value="Microwave">🍳 Microwave</option>
+        </select>
+        <select name="brand" value={filters.brand} onChange={handleFilterChange} disabled={!filters.category}>
+          <option value="">All Brands</option>
+          {availableBrands.map(brand => (
+            <option key={brand} value={brand}>{brand}</option>
+          ))}
         </select>
         <select name="sort" value={filters.sort} onChange={handleFilterChange}>
           <option value="">Sort By</option>
@@ -145,27 +122,48 @@ const ProductList = () => {
       {loading ? (
         <div>Loading products...</div>
       ) : (
-        <div className="products-grid">
-          {products.map(product => (
-            <div key={product.id} className="product-card">
-              <img 
-                src={product.thumbnail || product.image} 
-                alt={product.title}
-                onError={handleImageError}
-              />
-              <h3>{product.title}</h3>
-              <p className="price">₹{Math.round(product.price * 83)}</p>
-              <p className="description">{product.description.substring(0, 50)}...</p>
-              <div className="rating">⭐ {typeof product.rating === 'object' ? product.rating?.rate || 'N/A' : product.rating || 'N/A'}</div>
-              <button 
-                className="view-btn"
-                onClick={() => navigate(`/product/${product.id}`)}
+        <>
+          <div className="products-grid">
+            {products.map(product => (
+              <div 
+                key={product._id || product.id} 
+                className="product-card" 
+                style={{opacity: 1, borderColor: '#ddd', borderWidth: '1px', position: 'relative', cursor: 'pointer'}}
+                onClick={() => navigate(`/product/${product._id || product.id}`)}
               >
-                View Details
-              </button>
-            </div>
-          ))}
-        </div>
+                {!product.visible && <div style={{position: 'absolute', top: '10px', left: '10px', backgroundColor: '#ff9900', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', zIndex: 2}}>OUT OF STOCK</div>}
+                <img 
+                  src={getImageUrl(product.image?.trim() || product.thumbnail)} 
+                  alt={product.name || product.title}
+                  onError={handleImageError}
+                  className={product.visible ? '' : 'dimmed'}
+                  style={{width: '100%', height: '200px', objectFit: 'cover', display: 'block'}}
+                />
+                <h3>
+                  {product.name || product.title}
+                </h3>
+                <p className="price">₹{product.price || 0}</p>
+                {product.stock !== undefined && (
+                  <p className={`stock-label ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
+                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                  </p>
+                )}
+                <p className="description">{(product.description || '').substring(0, 50)}...</p>
+                <div className="rating">⭐ {typeof product.rating === 'object' ? product.rating?.rate || 'N/A' : product.rating || 'N/A'}</div>
+                <button 
+                  className="view-btn"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/product/${product._id || product.id}`);
+                  }}
+                  disabled={product.stock !== undefined && product.stock <= 0}
+                >
+                  {product.stock !== undefined && product.stock <= 0 ? 'Unavailable' : 'View Details'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

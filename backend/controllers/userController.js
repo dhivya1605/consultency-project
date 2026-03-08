@@ -47,8 +47,42 @@ const getUserPurchaseHistory = async (req, res) => {
   }
 };
 
+// Get all users (admin)
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json({ users });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch users', error: error.message });
+  }
+};
+
+// Update user block status (admin)
+const updateUserBlockStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { isBlocked } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { isBlocked },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'User status updated', user });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update user', error: error.message });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
-  getUserPurchaseHistory
+  getUserPurchaseHistory,
+  getAllUsers,
+  updateUserBlockStatus
 };

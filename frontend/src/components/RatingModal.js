@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 
-const RatingModal = ({ orderId, onClose, onSubmit }) => {
+const RatingModal = ({ orderId, productId, onClose, onSubmit }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,17 +18,18 @@ const RatingModal = ({ orderId, onClose, onSubmit }) => {
     try {
       await axios.post('http://localhost:5000/api/ratings/submit', {
         orderId,
+        productId, // Correctly pass the productId
         rating,
         comment
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       onSubmit();
       onClose();
     } catch (error) {
       console.error('Failed to submit rating:', error);
-      alert('Failed to submit rating');
+      alert(`Failed to submit rating: ${error.response?.data?.message || error.message}`); // Display detailed error message
     } finally {
       setLoading(false);
     }

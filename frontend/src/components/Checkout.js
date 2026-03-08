@@ -63,7 +63,7 @@ const Checkout = () => {
               cart.items.map((item, index) => (
                 <div key={index} className="order-item">
                   <span>{item.name || item.title}</span>
-                  <span>₹{Math.round(item.price * 83)}</span>
+                  <span>₹{item.price}</span>
                 </div>
               ))
             ) : (
@@ -73,7 +73,7 @@ const Checkout = () => {
           <div className="order-summary">
             <div className="summary-row">
               <span>Subtotal:</span>
-              <span>₹{Math.round(subtotal * 83)}</span>
+              <span>₹{subtotal}</span>
             </div>
             {subtotal > 500 ? (
               <div className="summary-row discount">
@@ -88,7 +88,7 @@ const Checkout = () => {
             )}
             <div className="summary-row total">
               <span>Total:</span>
-              <span>₹{Math.round(total * 83)}</span>
+              <span>₹{total}</span>
             </div>
           </div>
         </div>

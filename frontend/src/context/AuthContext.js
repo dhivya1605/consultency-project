@@ -31,14 +31,13 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
-  const register = async (name, email, password, role = 'user') => {
+  const register = async (name, email, password) => {
     setLoading(true);
     try {
       const response = await axios.post('http://localhost:5000/api/auth/register', {
         name,
         email,
-        password,
-        role
+        password
       });
       setToken(response.data.token);
       setUser(response.data.user);

@@ -3,14 +3,13 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const LoginRegister = () => {
-  const { login, register } = useAuth();
+  const { login, register, user } = useAuth();
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    role: 'user'
+    password: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,12 +28,16 @@ const LoginRegister = () => {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        await login(formData.email, formData.password);
+      const userData = isLogin 
+        ? await login(formData.email, formData.password)
+        : await register(formData.name, formData.email, formData.password);
+      
+      // Redirect based on user role
+      if (userData.user?.role === 'admin') {
+        navigate('/admin');
       } else {
-        await register(formData.name, formData.email, formData.password, formData.role);
+        navigate('/');
       }
-      navigate('/');
     } catch (err) {
       setError(err.message || 'An error occurred');
     } finally {
@@ -79,12 +82,7 @@ const LoginRegister = () => {
             required
           />
 
-          {!isLogin && (
-            <select name="role" value={formData.role} onChange={handleChange}>
-              <option value="user">Customer</option>
-              <option value="admin">Admin</option>
-            </select>
-          )}
+
 
           <button type="submit" disabled={loading}>
             {loading ? 'Loading...' : (isLogin ? 'Login' : 'Register')}

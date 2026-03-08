@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import AdminProducts from './AdminProducts';
 
 const AdminDashboard = () => {
   const { user, token } = useAuth();
@@ -17,6 +18,9 @@ const AdminDashboard = () => {
       return;
     }
     fetchData();
+    // fetchData is stable (declared within component) and we intentionally
+    // only want to run when auth/navigate change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, token]);
 
   const fetchData = async () => {
@@ -61,6 +65,12 @@ const AdminDashboard = () => {
           onClick={() => setActiveTab('users')}
         >
           Users & Orders
+        </button>
+        <button 
+          className={activeTab === 'products' ? 'active' : ''}
+          onClick={() => setActiveTab('products')}
+        >
+          Products
         </button>
       </div>
 
@@ -173,7 +183,7 @@ const AdminDashboard = () => {
                 <h3>{user.name}</h3>
                 <div className="user-stats">
                   <span className="stat">Orders: {user.totalOrders}</span>
-                  <span className="stat">Spent: ₹{Math.round(user.totalSpent * 83)}</span>
+                  <span className="stat">Spent: ₹{user.totalSpent}</span>
                 </div>
               </div>
               
@@ -189,7 +199,7 @@ const AdminDashboard = () => {
                     <div key={order._id} className="order-summary">
                       <div className="order-info">
                         <span className="order-id">#{order._id.slice(-8)}</span>
-                        <span className="order-amount">₹{Math.round(order.totalAmount * 83)}</span>
+                        <span className="order-amount">₹{order.totalAmount}</span>
                         <span className={`order-status ${order.orderStatus.toLowerCase()}`}>
                           {order.orderStatus}
                         </span>
@@ -207,6 +217,10 @@ const AdminDashboard = () => {
             </div>
           ))}
         </div>
+      )}
+
+      {activeTab === 'products' && (
+        <AdminProducts />
       )}
     </div>
   );

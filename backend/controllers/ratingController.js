@@ -1,10 +1,47 @@
 const Rating = require('../models/Rating');
+const Order = require('../models/Order');
+
+// Get reviews for a specific product
+const getProductReviews = async (req, res) => {
+  try {
+    const { productId } = req.params;
+    
+    // Find all orders that contain this product
+    const orders = await Order.find({
+      'items.productId': productId
+    }).select('_id');
+    
+    const orderIds = orders.map(o => o._id);
+    
+    // Get all ratings for those orders
+    const reviews = await Rating.find({
+      orderId: { $in: orderIds }
+    })
+      .populate('userId', 'name email')
+      .sort({ createdAt: -1 });
+    
+    res.json({ reviews });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch reviews', error: error.message });
+  }
+};
 
 // Submit rating
 const submitRating = async (req, res) => {
   try {
-    const { orderId, rating, comment } = req.body;
+    const { orderId, rating, comment, productId } = req.body;
     const userId = req.userId;
+
+    // Verify the order belongs to the user and contains this product
+    const order = await Order.findOne({
+      _id: orderId,
+      userId: userId,
+      'items.productId': productId
+    });
+
+    if (!order) {
+      return res.status(403).json({ message: 'You can only review products from your orders' });
+    }
 
     const newRating = new Rating({
       userId,
@@ -14,7 +51,7 @@ const submitRating = async (req, res) => {
     });
 
     await newRating.save();
-    res.status(201).json({ message: 'Rating submitted successfully', rating: newRating });
+    res.status(201).json({ message: 'Review submitted successfully', rating: newRating });
   } catch (error) {
     res.status(500).json({ message: 'Failed to submit rating', error: error.message });
   }
@@ -52,5 +89,6 @@ const getRatingAnalytics = async (req, res) => {
 
 module.exports = {
   submitRating,
-  getRatingAnalytics
+  getRatingAnalytics,
+  getProductReviews
 };

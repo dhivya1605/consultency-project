@@ -41,6 +41,28 @@ const createOrder = async (req, res) => {
 
     await order.save();
 
+    // Reduce stock for each product in the order
+    for (const item of orderItems) {
+      const productId = item.productId;
+      const product = await Product.findById(productId);
+
+      if (product) {
+        // Check if enough stock available
+        if ((product.stock || 0) < (item.quantity || 0)) {
+          // Restore order by deleting it since we don't have enough stock
+          await Order.deleteOne({ _id: order._id });
+          return res.status(400).json({ 
+            message: `Not enough stock for ${item.name}. Available: ${product.stock || 0}, Requested: ${item.quantity || 0}` 
+          });
+        }
+        
+        // Reduce stock by the ordered quantity
+        product.stock = (product.stock || 0) - (item.quantity || 0);
+        await product.save();
+        console.log(`Stock reduced for product ${productId}: ${item.quantity} units. New stock: ${product.stock}`);
+      }
+    }
+
     // Clear cart
     await Cart.deleteOne({ userId });
 
@@ -86,7 +108,7 @@ const processPayment = async (req, res) => {
   try {
     const { orderId, cardDetails } = req.body;
 
-    // Simulated payment processing
+    // Get the order and update status
     const order = await Order.findByIdAndUpdate(
       orderId,
       { paymentStatus: 'Completed', orderStatus: 'Confirmed' },
