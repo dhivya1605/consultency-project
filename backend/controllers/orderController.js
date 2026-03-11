@@ -17,7 +17,6 @@ const createOrder = async (req, res) => {
 
     // Create order items handling both DB and external products
     const orderItems = cart.items.map(item => {
-      // For external API products, productId might be a string/number
       const productId = item.productId?._id || item.productId;
       const productName = item.productId?.name || `Product ${productId}`;
       
@@ -158,23 +157,41 @@ const getAllOrders = async (req, res) => {
 // Update order status (Admin)
 const updateOrderStatus = async (req, res) => {
   try {
+    console.log('Request received to update order status:', req.body);
+
     const { orderId, orderStatus } = req.body;
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      { orderStatus, updatedAt: new Date() },
-      { new: true }
-    );
-
+    const order = await Order.findById(orderId);
     if (!order) {
+      console.log('Order not found:', orderId);
       return res.status(404).json({ message: 'Order not found' });
     }
 
+    // Enforce precedence rule
+    const validTransitions = {
+      Pending: ['Shipped', 'Cancelled'],
+      Shipped: ['Delivered'],
+      Delivered: [],
+      Cancelled: []
+    };
+
+    if (!validTransitions[order.orderStatus].includes(orderStatus)) {
+      return res.status(400).json({
+        message: `Invalid status transition from ${order.orderStatus} to ${orderStatus}`
+      });
+    }
+
+    order.orderStatus = orderStatus;
+    order.updatedAt = new Date();
+    await order.save();
+
+    console.log('Order status updated successfully:', order);
     res.json({
       message: 'Order status updated',
       order
     });
   } catch (error) {
+    console.error('Failed to update order status:', error);
     res.status(500).json({ message: 'Failed to update order', error: error.message });
   }
 };

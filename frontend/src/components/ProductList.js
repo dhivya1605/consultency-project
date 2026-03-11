@@ -145,7 +145,7 @@ const ProductList = () => {
                 <p className="price">₹{product.price || 0}</p>
                 {product.stock !== undefined && (
                   <p className={`stock-label ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                    {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                    {product.stock > 0 ? 'In Stock' : 'Out of stock'}
                   </p>
                 )}
                 <p className="description">{(product.description || '').substring(0, 50)}...</p>

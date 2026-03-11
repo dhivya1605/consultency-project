@@ -12,6 +12,56 @@
   font-size: 2rem;
 }
 
+.prediction-section {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.prediction-section h2 {
+  color: #1a3a52;
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.prediction-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.prediction-card {
+  background: linear-gradient(135deg, #1a3a52 0%, #2d5a80 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(26, 58, 82, 0.2);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.prediction-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(26, 58, 82, 0.3);
+}
+
+.prediction-card h3 {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.prediction-value {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ffd700;
+  margin: 0;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

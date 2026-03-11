@@ -82,3 +82,10 @@ class DataProcessor:
         elif strategy == 'drop':
             return df.dropna()
         return df
+
+    @staticmethod
+    def load_category_distribution_from_excel(file_path):
+        """Load category distribution from Excel file"""
+        df = pd.read_excel(file_path)
+        category_counts = df['category'].value_counts().to_dict()
+        return category_counts

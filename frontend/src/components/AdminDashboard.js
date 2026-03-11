@@ -12,6 +12,24 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
+  const fetchProductNames = async (products) => {
+    const updatedProducts = await Promise.all(
+      products.map(async (product) => {
+        if (!product.name) {
+          try {
+            const response = await axios.get(`http://localhost:5000/api/products/${product.id}`);
+            return { ...product, name: response.data.title };
+          } catch (error) {
+            console.error(`Failed to fetch product name for ID: ${product.id}`, error);
+            return { ...product, name: 'Unknown Product' };
+          }
+        }
+        return product;
+      })
+    );
+    return updatedProducts;
+  };
+
   useEffect(() => {
     if (user?.role !== 'admin') {
       navigate('/');
@@ -28,7 +46,8 @@ const AdminDashboard = () => {
       const salesRes = await axios.get('http://localhost:5000/api/admin/sales-report', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setSalesData(salesRes.data);
+      const updatedTopSellingProducts = await fetchProductNames(salesRes.data.topSellingProducts);
+      setSalesData({ ...salesRes.data, topSellingProducts: updatedTopSellingProducts });
 
       const usersRes = await axios.get('http://localhost:5000/api/admin/users', {
         headers: { Authorization: `Bearer ${token}` }
@@ -103,22 +122,17 @@ const AdminDashboard = () => {
               <div className="analytics-grid">
                 <div className="chart-section">
                   <h3>Top Selling Products</h3>
-                  <div className="product-chart">
-                    {salesData.chartData.chartData?.map((item, index) => (
-                      <div key={index} className="chart-bar">
-                        <div className="bar-info">
-                          <span className="product-name">{item.product}</span>
-                          <span className="product-sales">₹{item.sales}</span>
-                        </div>
-                        <div className="bar-container">
-                          <div 
-                            className="bar-fill" 
-                            style={{ width: `${item.percentage}%` }}
-                          ></div>
-                        </div>
-                        <span className="percentage">{item.percentage}%</span>
-                      </div>
-                    ))}
+                  <div className="top-selling-products">
+                    <h2>Top Selling Products</h2>
+                    <ul>
+                      {salesData?.topSellingProducts?.map((product, index) => (
+                        <li key={product.id}>
+                          <span>{index + 1}. {product.name || 'Unknown Product'}</span> {/* Display product name */}
+                          <span>{product.sold} sold</span>
+                          <span>₹{product.revenue}</span>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
 

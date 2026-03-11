@@ -5,11 +5,9 @@ import './AdminProducts.css';
 
 // Category and Brand mapping
 const CATEGORY_BRAND_MAP = {
-  'Grinder': ['Preethi', 'Philips', 'Havells', 'Butterfly', 'Bajaj'],
-  'TV': ['Samsung', 'LG', 'Sony', 'TCL', 'Panasonic', 'OnePlus'],
+  'TV': ['Samsung', 'LG', 'Sony', 'TCL', 'Panasonic', 'OnePlus','VU CALIFORNIA'],
   'Washing Machine': ['Samsung', 'LG', 'IFB', 'Bosch', 'Whirlpool', 'Godrej'],
   'Fridge': ['Samsung', 'LG', 'Whirlpool', 'Godrej', 'Haier', 'Voltas'],
-  'Fan': ['Havells', 'Usha', 'Philips', 'Bajaj', 'Orient', 'Crompton'],
   'Microwave': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch']
 };
 
@@ -24,6 +22,7 @@ const AdminProducts = () => {
   const [form, setForm] = useState({
     name: '',
     description: '',
+    descriptionPoints: [],
     price: '',
     category: '',
     brand: '',
@@ -68,6 +67,28 @@ const AdminProducts = () => {
     }
   };
 
+  const handleAddDescriptionPoint = () => {
+    setForm(prev => ({
+      ...prev,
+      descriptionPoints: [...prev.descriptionPoints, '']
+    }));
+  };
+
+  const handleRemoveDescriptionPoint = (index) => {
+    setForm(prev => ({
+      ...prev,
+      descriptionPoints: prev.descriptionPoints.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleDescriptionPointChange = (index, value) => {
+    setForm(prev => {
+      const newPoints = [...prev.descriptionPoints];
+      newPoints[index] = value;
+      return { ...prev, descriptionPoints: newPoints };
+    });
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setImageFile(file);
@@ -105,10 +126,12 @@ const AdminProducts = () => {
       let config = { headers: { Authorization: `Bearer ${token}` } };
       let data;
 
+      const descriptionText = form.descriptionPoints.filter(p => p.trim()).join(' -> ');
+      
       if (imageFile) {
         data = new FormData();
         data.append('name', form.name);
-        data.append('description', form.description);
+        data.append('description', descriptionText);
         data.append('price', form.price);
         data.append('category', form.category);
         data.append('brand', form.brand);
@@ -118,7 +141,7 @@ const AdminProducts = () => {
         // For edits without new image
         data = {
           name: form.name,
-          description: form.description,
+          description: descriptionText,
           price: form.price,
           category: form.category,
           brand: form.brand,
@@ -138,6 +161,7 @@ const AdminProducts = () => {
       setForm({
         name: '',
         description: '',
+        descriptionPoints: [],
         price: '',
         category: '',
         brand: '',
@@ -155,9 +179,11 @@ const AdminProducts = () => {
 
   const handleEdit = (product) => {
     setEditingId(product._id);
+    const points = product.description ? product.description.split(' -> ').map(p => p.trim()) : [];
     setForm({
       name: product.name,
       description: product.description || '',
+      descriptionPoints: points,
       price: product.price,
       category: product.category,
       brand: product.brand,
@@ -204,6 +230,7 @@ const AdminProducts = () => {
     setForm({
       name: '',
       description: '',
+      descriptionPoints: [],
       price: '',
       category: '',
       brand: '',
@@ -321,14 +348,36 @@ const AdminProducts = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>Description</label>
-                  <textarea
-                    name="description"
-                    placeholder="Enter product description (optional)"
-                    value={form.description}
-                    onChange={handleChange}
-                    rows="3"
-                  />
+                  <label>Description Points</label>
+                  <div className="description-points-container">
+                    {form.descriptionPoints.map((point, index) => (
+                      <div key={index} className="description-point-row">
+                        <span className="point-number">{index + 1}.</span>
+                        <input
+                          type="text"
+                          placeholder={`Enter description point ${index + 1}`}
+                          value={point}
+                          onChange={(e) => handleDescriptionPointChange(index, e.target.value)}
+                          className="description-point-input"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveDescriptionPoint(index)}
+                          className="remove-point-btn"
+                          title="Remove this point"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleAddDescriptionPoint}
+                      className="add-point-btn"
+                    >
+                      + Add Point
+                    </button>
+                  </div>
                 </div>
 
                 <div className="form-group">

@@ -7,11 +7,21 @@ from sklearn.metrics.pairwise import cosine_similarity
 import os
 from dotenv import load_dotenv
 import json
-
+from ml_models.data.data_processor import DataProcessor
 load_dotenv()
 
 app = Flask(__name__)
 CORS(app)
+
+# Path to Excel dataset
+EXCEL_DATASET_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'electronic_shop_products_dataset_500.xlsx'))
+
+# Load category distribution once at startup
+try:
+    CATEGORY_DISTRIBUTION = DataProcessor.load_category_distribution_from_excel(EXCEL_DATASET_PATH)
+except Exception as e:
+    CATEGORY_DISTRIBUTION = {}
+    print(f"Error loading category distribution: {e}")
 
 # Initialize recommendation models
 class RecommendationEngine:
@@ -236,4 +246,13 @@ def get_sales_chart():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
+    @app.route('/api/category-data', methods=['GET'])
+    def get_category_data():
+        """Return category distribution from Excel dataset"""
+        try:
+            return jsonify({
+                'category_distribution': CATEGORY_DISTRIBUTION
+            })
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
     app.run(host='0.0.0.0', port=8000, debug=True)

@@ -15,12 +15,14 @@ const AdminOrders = () => {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
     try {
+      console.log('Fetching orders...');
       const res = await apiCall.get('/orders/admin/all', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
+      console.log('Orders fetched successfully:', res.data.orders);
       setOrders(res.data.orders || []);
-    } catch (err) {
-      console.error('Error fetching orders:', err);
+    } catch (error) {
+      console.error('Failed to fetch orders:', error);
     } finally {
       setLoading(false);
     }
@@ -36,17 +38,25 @@ const AdminOrders = () => {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      await apiCall.put(
-        `/orders/admin/status`,
-        { orderId, status: newStatus },
+      const response = await apiCall.put(
+        '/orders/admin/status',
+        { orderId, orderStatus: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setOrders(prev => prev.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
-      setEditingId(null);
+
+      const updatedOrder = response.data.order;
+
+      setOrders(prevOrders =>
+        prevOrders.map(order =>
+          order._id === updatedOrder._id ? { ...order, orderStatus: updatedOrder.orderStatus } : order
+        )
+      );
+
       alert('✅ Order status updated!');
-    } catch (err) {
-      console.error('Error updating order:', err);
-      alert('❌ Failed to update order');
+      setEditingId(null);
+    } catch (error) {
+      console.error('Failed to update order status:', error);
+      alert('❌ Failed to update order status.');
     }
   };
 
@@ -82,31 +92,31 @@ const AdminOrders = () => {
                     <td>{order.userId?.name || 'Unknown'}</td>
                     <td className="amount">₹{order.totalAmount?.toLocaleString('en-IN') || 0}</td>
                     <td>
-                      <span className={`status ${order.status?.toLowerCase()}`}>
-                        {order.status || 'Pending'}
+                      <span className={`status ${order.orderStatus?.toLowerCase()}`}>
+                        {order.orderStatus || 'Pending'}
                       </span>
                     </td>
-                    <td>{new Date(order.createdAt).toLocaleDateString('en-IN')}</td>
+                    <td>{order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-IN') : 'Date not available'}</td>
                     <td>
                       {editingId === order._id ? (
                         <div className="status-edit">
-                          <select 
+                          <select
                             value={editStatus}
                             onChange={(e) => setEditStatus(e.target.value)}
                           >
                             <option value="">Select Status</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Shipped">Shipped</option>
-                            <option value="Delivered">Delivered</option>
-                            <option value="Cancelled">Cancelled</option>
+                            <option value="Pending" disabled={order.orderStatus !== 'Pending'}>Pending</option>
+                            <option value="Shipped" disabled={order.orderStatus !== 'Pending'}>Shipped</option>
+                            <option value="Delivered" disabled={order.orderStatus !== 'Shipped'}>Delivered</option>
+                            <option value="Cancelled" disabled={order.orderStatus === 'Shipped' || order.orderStatus === 'Delivered'}>Cancelled</option>
                           </select>
-                          <button 
+                          <button
                             className="save-btn"
                             onClick={() => handleStatusUpdate(order._id, editStatus)}
                           >
                             ✓
                           </button>
-                          <button 
+                          <button
                             className="cancel-btn"
                             onClick={() => setEditingId(null)}
                           >
@@ -114,11 +124,11 @@ const AdminOrders = () => {
                           </button>
                         </div>
                       ) : (
-                        <button 
+                        <button
                           className="edit-btn"
                           onClick={() => {
                             setEditingId(order._id);
-                            setEditStatus(order.status || 'Pending');
+                            setEditStatus(order.orderStatus || 'Pending');
                           }}
                         >
                           ✏️ Edit

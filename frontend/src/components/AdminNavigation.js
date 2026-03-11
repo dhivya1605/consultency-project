@@ -86,6 +86,13 @@ const AdminNavigation = () => {
           >
             📈 Analytics
           </Link>
+          <Link 
+            to="/admin/reports" 
+            onClick={handleNavClick}
+            className={`admin-nav-link ${isActive('/admin/reports') ? 'active' : ''}`}
+          >
+            📊 Reports
+          </Link>
           <hr style={{margin: '1rem 0', opacity: 0.3}} />
           <button 
             onClick={handleLogout}

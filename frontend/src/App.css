@@ -737,6 +737,31 @@ body {
     font-size: 0.95rem;
   }
 
+  .description-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0;
+  }
+
+  .description-list li {
+    padding: 0.875rem 0 0.875rem 1.75rem;
+    color: #333;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    position: relative;
+    margin-bottom: 0.5rem;
+  }
+
+  .description-list li:before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: #0066cc;
+    font-weight: bold;
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+
   .detail-actions {
     margin-bottom: 2rem;
     display: flex;

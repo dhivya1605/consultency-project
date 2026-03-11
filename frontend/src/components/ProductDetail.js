@@ -10,7 +10,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [reviews, setReviews] = useState([]);
-  const [user, { token }] = useAuth();
+  const { user, token } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
@@ -18,6 +18,7 @@ const ProductDetail = () => {
     fetchProductDetail();
     fetchReviews();
     if (user) {
+
       fetchUserOrders();
     }
   }, [id, user]);
@@ -107,7 +108,7 @@ const ProductDetail = () => {
 
         <div className="detail-info">
           {/* Display product name above overall rating */}
-          <h1>{product.title}</h1>
+          <h1>{product.name}</h1> {/* Ensure product name is displayed even if product is null */}
 
           {/* Display rating as golden stars with average rating and number of members who rated */}
           <div className="detail-rating">
@@ -136,7 +137,16 @@ const ProductDetail = () => {
 
           <div className="detail-description">
             <h3>About this product</h3>
-            <p>{product.description}</p>
+            {product.description && product.description.includes('->') ? (
+              <ul className="description-list">
+                {product.description.split('->').map((point, idx) => {
+                  const cleanPoint = point.trim();
+                  return cleanPoint ? <li key={idx}>{cleanPoint}</li> : null;
+                })}
+              </ul>
+            ) : (
+              <p>{product.description}</p>
+            )}
           </div>
 
           <div className="detail-actions">

@@ -25,6 +25,11 @@ const OrderConfirmation = () => {
     estimatedDelivery.getDate() + (orderData.deliveryType === 'express' ? 2 : 5)
   );
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+  };
+
   return (
     <div className="confirmation-container">
       <div className="confirmation-card">
@@ -61,7 +66,7 @@ const OrderConfirmation = () => {
             </div>
             <div className="detail-row">
               <span>Estimated Delivery:</span>
-              <span className="detail-value">{estimatedDelivery.toDateString()}</span>
+              <span className="detail-value">{formatDate(estimatedDelivery)}</span>
             </div>
           </div>
         </div>
