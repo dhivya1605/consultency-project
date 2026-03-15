@@ -37,6 +37,12 @@ const ProductSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  warranty: {
+    type: Number,
+    default: 1,
+    min: 0,
+    max: 10
+  },
   specifications: mongoose.Schema.Types.Mixed,
   viewCount: {
     type: Number,

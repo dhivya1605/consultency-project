@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 // Get all products with filtering
 const getAllProducts = async (req, res) => {
   try {
-    const { category, brand, search, sort, page = 1, limit = 10 } = req.query;
+    const { category, brand, search, sort, page = 1, limit = 50 } = req.query;
 
     let query = {};
 
@@ -51,8 +51,9 @@ const getAllProducts = async (req, res) => {
     let products = Product.find(query);
 
     if (sort === 'price-asc') products = products.sort({ price: 1 });
-    if (sort === 'price-desc') products = products.sort({ price: -1 });
-    if (sort === 'rating') products = products.sort({ rating: -1 });
+    else if (sort === 'price-desc') products = products.sort({ price: -1 });
+    else if (sort === 'rating') products = products.sort({ rating: -1 });
+    else products = products.sort({ createdAt: -1 }); // Default: newest first
 
     const skip = (page - 1) * limit;
     products = products.skip(skip).limit(parseInt(limit));
@@ -170,11 +171,21 @@ const createProduct = async (req, res) => {
     });
 
     // body fields may come from multipart/form-data
-    const { name, description, price, category, brand, image, specifications, externalSource, stock } = req.body;
+    const { name, description, price, category, brand, image, specifications, externalSource, stock, warranty } = req.body;
 
     // Convert string values from FormData to proper types
     const parsedPrice = parseFloat(price);
     const parsedStock = parseInt(stock, 10) || 0;
+    const parsedWarranty = parseInt(warranty, 10) || 0;
+    
+    let parsedSpecifications = specifications;
+    if (typeof specifications === 'string') {
+      try {
+        parsedSpecifications = JSON.parse(specifications);
+      } catch (e) {
+        console.warn('Could not parse specifications:', e);
+      }
+    }
 
     if (!name || !price || !category || !brand) {
       console.warn('Missing required fields:', { name, price, category, brand });
@@ -210,9 +221,10 @@ const createProduct = async (req, res) => {
       category,
       brand,
       image: imageUrl,
-      specifications,
+      specifications: parsedSpecifications,
       externalSource,
       stock: parsedStock,
+      warranty: parsedWarranty,
       visible: req.body.visible !== undefined ? req.body.visible : true
     });
 
@@ -245,8 +257,20 @@ const updateProduct = async (req, res) => {
       updates.stock = parseInt(updates.stock, 10);
     }
     
+    if (updates.warranty !== undefined) {
+      updates.warranty = parseInt(updates.warranty, 10);
+    }
+    
     if (updates.visible !== undefined) {
       updates.visible = updates.visible === 'true' || updates.visible === true;
+    }
+
+    if (updates.specifications !== undefined && typeof updates.specifications === 'string') {
+      try {
+        updates.specifications = JSON.parse(updates.specifications);
+      } catch (e) {
+        console.warn('Could not parse specifications:', e);
+      }
     }
 
     // if new image file uploaded, overwrite with local URL

@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiCall } from '../utils/api';
+import { CATEGORY_SPECIFICATIONS } from '../utils/productSpecifications';
 import './AdminProducts.css';
 
 // Category and Brand mapping
@@ -8,7 +9,8 @@ const CATEGORY_BRAND_MAP = {
   'TV': ['Samsung', 'LG', 'Sony', 'TCL', 'Panasonic', 'OnePlus','VU CALIFORNIA'],
   'Washing Machine': ['Samsung', 'LG', 'IFB', 'Bosch', 'Whirlpool', 'Godrej'],
   'Fridge': ['Samsung', 'LG', 'Whirlpool', 'Godrej', 'Haier', 'Voltas'],
-  'Microwave': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch']
+  'Microwave Oven': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch'],
+  'AC': ['LG', 'Voltas', 'Samsung', 'Daikin', 'Lloyd', 'Blue Star', 'Hitachi']
 };
 
 const AdminProducts = () => {
@@ -26,10 +28,19 @@ const AdminProducts = () => {
     price: '',
     category: '',
     brand: '',
-    stock: ''
+    stock: '',
+    warranty: '',
+    specifications: {}
   });
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState('');
+  const [stockError, setStockError] = useState('');
+  const [priceError, setPriceError] = useState('');
+  const [warrantyError, setWarrantyError] = useState('');
+  const [nameError, setNameError] = useState('');
+  const [categoryError, setCategoryError] = useState('');
+  const [brandError, setBrandError] = useState('');
+  const [specErrors, setSpecErrors] = useState({});
 
   // Get available brands based on selected category
   const availableBrands = form.category ? (CATEGORY_BRAND_MAP[form.category] || []) : [];
@@ -60,10 +71,104 @@ const AdminProducts = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'category') {
-      // Reset brand when category changes
-      setForm(prev => ({ ...prev, [name]: value, brand: '' }));
+      // Reset brand and specifications when category changes
+      setForm(prev => ({ ...prev, [name]: value, brand: '', specifications: {} }));
+      setSpecErrors({});
+    } else if (name === 'stock') {
+      // Validate stock in real-time
+      const stockValue = parseInt(value, 10);
+      if (value && (isNaN(stockValue) || stockValue < 0)) {
+        setStockError('Stock cannot be negative');
+      } else {
+        setStockError('');
+      }
+      setForm(prev => ({ ...prev, [name]: value }));
+    } else if (name === 'price') {
+      // Validate price in real-time
+      const priceValue = parseFloat(value);
+      if (value && (isNaN(priceValue) || priceValue <= 0)) {
+        setPriceError('Price must be greater than 0');
+      } else {
+        setPriceError('');
+      }
+      setForm(prev => ({ ...prev, [name]: value }));
+    } else if (name === 'warranty') {
+      // Validate warranty in real-time
+      const warrantyValue = parseInt(value, 10);
+      if (value && (isNaN(warrantyValue) || warrantyValue < 0 || warrantyValue > 10)) {
+        setWarrantyError('Warranty must be between 0 and 10 years');
+      } else {
+        setWarrantyError('');
+      }
+      setForm(prev => ({ ...prev, [name]: value }));
+    } else if (name === 'name') {
+      setNameError(value.trim() ? '' : 'Product name is required');
+      setForm(prev => ({ ...prev, [name]: value }));
+    } else if (name === 'category') {
+      setCategoryError(value ? '' : 'Category is required');
+      setForm(prev => ({ ...prev, [name]: value, brand: '', specifications: {} }));
+      setSpecErrors({});
+      setBrandError('');
+    } else if (name === 'brand') {
+      setBrandError(value ? '' : 'Brand is required');
+      setForm(prev => ({ ...prev, [name]: value }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleSpecificationChange = (specName, value) => {
+    setForm(prev => ({
+      ...prev,
+      specifications: {
+        ...prev.specifications,
+        [specName]: value
+      }
+    }));
+
+    // Real-time validation
+    const specsConfig = CATEGORY_SPECIFICATIONS[form.category];
+    if (specsConfig) {
+      const spec = specsConfig.find(s => s.name === specName);
+      if (spec) {
+        if (spec.required && (value === undefined || value === '')) {
+          setSpecErrors(prev => ({ ...prev, [specName]: `${specName} is required` }));
+        } else if (value !== undefined && value !== '') {
+          if (spec.type === 'number') {
+            const numVal = parseFloat(value);
+            if (spec.min !== undefined && numVal < spec.min) {
+              setSpecErrors(prev => ({ ...prev, [specName]: `${specName} must be at least ${spec.min}` }));
+            } else if (spec.max !== undefined && numVal > spec.max) {
+              setSpecErrors(prev => ({ ...prev, [specName]: `${specName} cannot exceed ${spec.max}` }));
+            } else {
+              // Valid
+              setSpecErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[specName];
+                return newErrors;
+              });
+            }
+          } else if (spec.type === 'dropdown' && spec.values && !spec.values.includes(value)) {
+            setSpecErrors(prev => ({ ...prev, [specName]: `Invalid value for ${specName}` }));
+          } else if (spec.type === 'boolean' && typeof value !== 'boolean') {
+            setSpecErrors(prev => ({ ...prev, [specName]: `Invalid value for ${specName}` }));
+          } else {
+             // Valid dropdown/boolean
+             setSpecErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[specName];
+                return newErrors;
+             });
+          }
+        } else {
+           // Value is empty but not required
+           setSpecErrors(prev => {
+              const newErrors = { ...prev };
+              delete newErrors[specName];
+              return newErrors;
+           });
+        }
+      }
     }
   };
 
@@ -97,22 +202,104 @@ const AdminProducts = () => {
   const handleAdd = async (e) => {
     e.preventDefault();
     setError('');
+    setSpecErrors({});
+    let hasError = false;
     
     // Validate required fields
     if (!form.name?.trim()) {
-      setError('❌ Product name is required');
-      return;
+      setNameError('Product name is required');
+      hasError = true;
+    } else {
+      setNameError('');
     }
-    if (!form.price || parseFloat(form.price) <= 0) {
-      setError('❌ Price must be greater than 0');
-      return;
+
+    if (form.price === '' || parseFloat(form.price) <= 0) {
+      setPriceError('Price must be greater than 0');
+      hasError = true;
+    } else {
+      setPriceError('');
     }
+
     if (!form.category) {
-      setError('❌ Category is required');
-      return;
+      setCategoryError('Category is required');
+      hasError = true;
+    } else {
+      setCategoryError('');
     }
+
     if (!form.brand) {
-      setError('❌ Brand is required');
+      setBrandError('Brand is required');
+      hasError = true;
+    } else {
+      setBrandError('');
+    }
+
+    if (form.stock === '' || parseInt(form.stock, 10) < 0) {
+      setStockError('Stock cannot be negative');
+      hasError = true;
+    } else {
+      setStockError('');
+    }
+
+    if (form.warranty === '' || parseInt(form.warranty, 10) < 0 || parseInt(form.warranty, 10) > 10) {
+      setWarrantyError('Warranty must be between 0 and 10 years');
+      hasError = true;
+    } else {
+      setWarrantyError('');
+    }
+
+    if (hasError) {
+      setError('❌ Please fix the validation errors below');
+      setTimeout(() => setError(''), 5000);
+    }
+
+    // Validate dynamic specifications
+    const specsConfig = CATEGORY_SPECIFICATIONS[form.category];
+    const newSpecErrors = {};
+    if (specsConfig) {
+      for (const spec of specsConfig) {
+        if (spec.dependsOn) {
+          const depValue = form.specifications[spec.dependsOn.field];
+          if (depValue !== spec.dependsOn.value) continue;
+        }
+
+        let value = form.specifications[spec.name];
+
+        // For boolean specs, treat undefined as false for required validation
+        if (spec.type === 'boolean' && value === undefined) {
+          value = false;
+        }
+        
+        if (spec.required && (value === undefined || value === '')) {
+          newSpecErrors[spec.name] = `${spec.name} is required`;
+          hasError = true;
+          continue;
+        }
+
+        if (value !== undefined && value !== '') {
+          if (spec.type === 'number') {
+            const numVal = parseFloat(value);
+            if (spec.min !== undefined && numVal < spec.min) {
+               newSpecErrors[spec.name] = `${spec.name} must be at least ${spec.min}`;
+               hasError = true;
+            } else if (spec.max !== undefined && numVal > spec.max) {
+               newSpecErrors[spec.name] = `${spec.name} cannot exceed ${spec.max}`;
+               hasError = true;
+            }
+          } else if (spec.type === 'dropdown' && spec.values && !spec.values.includes(value)) {
+             newSpecErrors[spec.name] = `Invalid value for ${spec.name}`;
+             hasError = true;
+          } else if (spec.type === 'boolean' && typeof value !== 'boolean') {
+             newSpecErrors[spec.name] = `Invalid value for ${spec.name}`;
+             hasError = true;
+          }
+        }
+      }
+    }
+
+    if (hasError) {
+      setSpecErrors(newSpecErrors);
+      setError('❌ Please fix the validation errors below');
       return;
     }
     
@@ -136,6 +323,10 @@ const AdminProducts = () => {
         data.append('category', form.category);
         data.append('brand', form.brand);
         data.append('stock', form.stock);
+        data.append('warranty', form.warranty);
+        if (Object.keys(form.specifications).length > 0) {
+          data.append('specifications', JSON.stringify(form.specifications));
+        }
         data.append('image', imageFile);
       } else {
         // For edits without new image
@@ -145,7 +336,9 @@ const AdminProducts = () => {
           price: form.price,
           category: form.category,
           brand: form.brand,
-          stock: form.stock
+          stock: form.stock,
+          warranty: form.warranty,
+          specifications: form.specifications
         };
       }
 
@@ -165,7 +358,9 @@ const AdminProducts = () => {
         price: '',
         category: '',
         brand: '',
-        stock: ''
+        stock: '',
+        warranty: '',
+        specifications: {}
       });
       setImageFile(null);
       setShowForm(false);
@@ -187,8 +382,11 @@ const AdminProducts = () => {
       price: product.price,
       category: product.category,
       brand: product.brand,
-      stock: product.stock
+      stock: product.stock,
+      warranty: product.warranty !== undefined ? product.warranty : '',
+      specifications: product.specifications || {}
     });
+    setSpecErrors({});
     setImageFile(null);
     setShowForm(true);
   };
@@ -234,10 +432,19 @@ const AdminProducts = () => {
       price: '',
       category: '',
       brand: '',
-      stock: ''
+      stock: '',
+      warranty: '',
+      specifications: {}
     });
+    setSpecErrors({});
     setImageFile(null);
     setError('');
+    setStockError('');
+    setPriceError('');
+    setWarrantyError('');
+    setNameError('');
+    setCategoryError('');
+    setBrandError('');
   };
 
   // Filter and search products
@@ -284,8 +491,9 @@ const AdminProducts = () => {
                     placeholder="Enter product name"
                     value={form.name}
                     onChange={handleChange}
-                    required
+                    className={nameError ? 'input-error' : ''}
                   />
+                  {nameError && <span className="validation-error">{nameError}</span>}
                 </div>
 
                 <div className="form-row">
@@ -297,8 +505,12 @@ const AdminProducts = () => {
                       placeholder="0.00"
                       value={form.price}
                       onChange={handleChange}
+                      className={priceError ? 'input-error' : ''}
+                      min="0"
+                      step="0.01"
                       required
                     />
+                    {priceError && <span className="validation-error">{priceError}</span>}
                   </div>
 
                   <div className="form-group">
@@ -309,8 +521,29 @@ const AdminProducts = () => {
                       placeholder="0"
                       value={form.stock}
                       onChange={handleChange}
+                      className={stockError ? 'input-error' : ''}
+                      min="0"
                       required
                     />
+                    {stockError && <span className="validation-error">{stockError}</span>}
+                  </div>
+                </div>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Warranty (Years) *</label>
+                    <input
+                      type="number"
+                      name="warranty"
+                      placeholder="e.g., 1"
+                      value={form.warranty}
+                      onChange={handleChange}
+                      className={warrantyError ? 'input-error' : ''}
+                      min="0"
+                      max="10"
+                      required
+                    />
+                    {warrantyError && <span className="validation-error">{warrantyError}</span>}
                   </div>
                 </div>
 
@@ -321,13 +554,14 @@ const AdminProducts = () => {
                       name="category"
                       value={form.category}
                       onChange={handleChange}
-                      required
+                      className={categoryError ? 'input-error' : ''}
                     >
                       <option value="">Select Category</option>
                       {Object.keys(CATEGORY_BRAND_MAP).map(cat => (
                         <option key={cat} value={cat}>{cat}</option>
                       ))}
                     </select>
+                    {categoryError && <span className="validation-error">{categoryError}</span>}
                   </div>
 
                   <div className="form-group">
@@ -336,7 +570,7 @@ const AdminProducts = () => {
                       name="brand"
                       value={form.brand}
                       onChange={handleChange}
-                      required
+                      className={brandError ? 'input-error' : ''}
                       disabled={!form.category}
                     >
                       <option value="">Select Brand</option>
@@ -344,8 +578,79 @@ const AdminProducts = () => {
                         <option key={brand} value={brand}>{brand}</option>
                       ))}
                     </select>
+                    {brandError && <span className="validation-error">{brandError}</span>}
                   </div>
                 </div>
+
+                {/* Dynamic Specifications */}
+                {CATEGORY_SPECIFICATIONS[form.category] && (
+                  <div className="dynamic-specifications" style={{ marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.1rem', color: '#2c3e50', marginBottom: '1rem', paddingBottom: '0.5rem', borderBottom: '1px solid #eee' }}>Technical Specifications</h3>
+                    <div className="form-row" style={{ flexWrap: 'wrap' }}>
+                      {CATEGORY_SPECIFICATIONS[form.category].map((spec, index) => {
+                        // Check dependencies
+                        if (spec.dependsOn) {
+                          const depValue = form.specifications[spec.dependsOn.field];
+                          if (depValue !== spec.dependsOn.value) return null;
+                        }
+
+                        return (
+                          <div key={index} className="form-group" style={{ flex: '1 1 calc(50% - 0.5rem)', minWidth: '200px' }}>
+                            <label>
+                              {spec.name} {spec.required && '*'} 
+                              {spec.unit && <span className="hint">({spec.unit})</span>}
+                            </label>
+                            
+                            {spec.type === 'dropdown' ? (
+                              <>
+                                <select
+                                  value={form.specifications[spec.name] || ''}
+                                  onChange={(e) => handleSpecificationChange(spec.name, e.target.value)}
+                                  required={spec.required}
+                                  className={specErrors[spec.name] ? 'input-error' : ''}
+                                >
+                                  <option value="">Select {spec.name}</option>
+                                  {spec.values.map(val => (
+                                    <option key={val} value={val}>{val}</option>
+                                  ))}
+                                </select>
+                                {specErrors[spec.name] && <span className="validation-error">{specErrors[spec.name]}</span>}
+                              </>
+                            ) : spec.type === 'boolean' ? (
+                              <div className="toggle-switch-container" style={{ marginTop: '0.25rem' }}>
+                                <label className="switch">
+                                  <input
+                                    type="checkbox"
+                                    checked={form.specifications[spec.name] || false}
+                                    onChange={(e) => handleSpecificationChange(spec.name, e.target.checked)}
+                                  />
+                                  <span className="slider round"></span>
+                                </label>
+                                <span style={{ marginLeft: '10px', fontWeight: '500', color: form.specifications[spec.name] ? '#4CAF50' : '#666' }}>
+                                  {form.specifications[spec.name] ? 'Yes' : 'No'}
+                                </span>
+                              </div>
+                            ) : (
+                              <>
+                                <input
+                                  type={spec.type === 'number' ? 'number' : 'text'}
+                                  placeholder={`Enter ${spec.name}`}
+                                  value={form.specifications[spec.name] || ''}
+                                  onChange={(e) => handleSpecificationChange(spec.name, spec.type === 'number' ? parseFloat(e.target.value) : e.target.value)}
+                                  min={spec.min}
+                                  max={spec.max}
+                                  required={spec.required}
+                                  className={specErrors[spec.name] ? 'input-error' : ''}
+                                />
+                                {specErrors[spec.name] && <span className="validation-error">{specErrors[spec.name]}</span>}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 <div className="form-group">
                   <label>Description Points</label>

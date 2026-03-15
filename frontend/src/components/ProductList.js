@@ -65,12 +65,10 @@ const ProductList = () => {
 
   // Get available brands based on selected category
   const availableBrands = {
-    'Grinder': ['Preethi', 'Philips', 'Havells', 'Butterfly', 'Bajaj'],
     'TV': ['Samsung', 'LG', 'Sony', 'TCL', 'Panasonic', 'OnePlus'],
     'Washing Machine': ['Samsung', 'LG', 'IFB', 'Bosch', 'Whirlpool', 'Godrej'],
     'Fridge': ['Samsung', 'LG', 'Whirlpool', 'Godrej', 'Haier', 'Voltas'],
-    'Fan': ['Havells', 'Usha', 'Philips', 'Bajaj', 'Orient', 'Crompton'],
-    'Microwave': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch']
+    'Microwave Oven': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch']
   }[filters.category] || [];
 
   const handleImageError = (e) => {
@@ -98,12 +96,10 @@ const ProductList = () => {
         />
         <select name="category" value={filters.category} onChange={handleFilterChange}>
           <option value="">All Categories</option>
-          <option value="Grinder">🔧 Grinder</option>
           <option value="TV">📺 TV</option>
           <option value="Washing Machine">🧺 Washing Machine</option>
           <option value="Fridge">❄️ Fridge</option>
-          <option value="Fan">🌀 Fan</option>
-          <option value="Microwave">🍳 Microwave</option>
+          <option value="Microwave Oven">🍳 Microwave Oven</option>
         </select>
         <select name="brand" value={filters.brand} onChange={handleFilterChange} disabled={!filters.category}>
           <option value="">All Brands</option>
@@ -127,39 +123,23 @@ const ProductList = () => {
             {products.map(product => (
               <div 
                 key={product._id || product.id} 
-                className="product-card" 
-                style={{opacity: 1, borderColor: '#ddd', borderWidth: '1px', position: 'relative', cursor: 'pointer'}}
+                className="product-card minimal-card" 
                 onClick={() => navigate(`/product/${product._id || product.id}`)}
               >
-                {!product.visible && <div style={{position: 'absolute', top: '10px', left: '10px', backgroundColor: '#ff9900', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 'bold', zIndex: 2}}>OUT OF STOCK</div>}
-                <img 
-                  src={getImageUrl(product.image?.trim() || product.thumbnail)} 
-                  alt={product.name || product.title}
-                  onError={handleImageError}
-                  className={product.visible ? '' : 'dimmed'}
-                  style={{width: '100%', height: '200px', objectFit: 'cover', display: 'block'}}
-                />
-                <h3>
-                  {product.name || product.title}
-                </h3>
-                <p className="price">₹{product.price || 0}</p>
-                {product.stock !== undefined && (
-                  <p className={`stock-label ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                    {product.stock > 0 ? 'In Stock' : 'Out of stock'}
-                  </p>
-                )}
-                <p className="description">{(product.description || '').substring(0, 50)}...</p>
-                <div className="rating">⭐ {typeof product.rating === 'object' ? product.rating?.rate || 'N/A' : product.rating || 'N/A'}</div>
-                <button 
-                  className="view-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/product/${product._id || product.id}`);
-                  }}
-                  disabled={product.stock !== undefined && product.stock <= 0}
-                >
-                  {product.stock !== undefined && product.stock <= 0 ? 'Unavailable' : 'View Details'}
-                </button>
+                {!product.visible && <div className="out-of-stock-badge">OUT OF STOCK</div>}
+                <div className="product-image-container">
+                  <img 
+                    src={getImageUrl(product.image?.trim() || product.thumbnail)} 
+                    alt={product.name || product.title}
+                    onError={handleImageError}
+                    className={product.visible ? '' : 'dimmed'}
+                  />
+                </div>
+                <div className="product-info-minimal">
+                  <h3 className="product-title-minimal">
+                    {product.name || product.title}
+                  </h3>
+                </div>
               </div>
             ))}
           </div>

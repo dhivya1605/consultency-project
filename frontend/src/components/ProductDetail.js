@@ -95,6 +95,7 @@ const ProductDetail = () => {
 
   return (
     <div className="product-detail-container">
+      <button className="back-btn" onClick={() => navigate(-1)}>Back to results</button>
       <div className="product-detail">
         <div className="detail-image">
           <img 
@@ -107,10 +108,8 @@ const ProductDetail = () => {
         </div>
 
         <div className="detail-info">
-          {/* Display product name above overall rating */}
-          <h1>{product.name}</h1> {/* Ensure product name is displayed even if product is null */}
+          <h1>{product.name}</h1>
 
-          {/* Display rating as golden stars with average rating and number of members who rated */}
           <div className="detail-rating">
             {reviews.length > 0 ? (
               <div className="rating-display">
@@ -119,21 +118,38 @@ const ProductDetail = () => {
                   {'★'.repeat(Math.floor(calculateOverallRating()))}
                   {'☆'.repeat(5 - Math.floor(calculateOverallRating()))}
                 </span>
-                <span className="rating-count">({reviews.length})</span>
+                <span className="rating-count">{reviews.length} ratings</span>
               </div>
             ) : (
-              <span>No ratings yet</span>
+              <span className="rating-count">No ratings yet</span>
             )}
           </div>
 
-          <div className="detail-price-stock">
-            <h2>₹{product.price || 0}</h2>
-            {product.stock !== undefined && (
-              <p className={`stock-label ${product.stock > 0 ? 'in-stock' : 'out-of-stock'}`}>
-                {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
-              </p>
-            )}
+          <div className="detail-price">
+            <h2>{product.price?.toLocaleString('en-IN') || 0}</h2>
           </div>
+
+          {/* Product Specifications Section */}
+          {product.specifications && Object.keys(product.specifications).length > 0 && (
+            <div className="detail-specifications">
+              <table className="specifications-table">
+                <tbody>
+                  {Object.entries(product.specifications).map(([key, value]) => {
+                    // Only render if value exists and is not an empty string
+                    if (value && String(value).trim() !== '') {
+                      return (
+                        <tr key={key}>
+                          <th className="spec-key">{key}</th>
+                          <td className="spec-value">{value}</td>
+                        </tr>
+                      );
+                    }
+                    return null;
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           <div className="detail-description">
             <h3>About this product</h3>
