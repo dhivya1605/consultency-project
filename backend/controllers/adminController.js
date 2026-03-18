@@ -127,6 +127,20 @@ const getSalesReport = async (req, res) => {
     // Get all orders for ML prediction
     const allOrders = await Order.find().sort({ orderDate: -1 });
 
+    // Get brand-wise sales breakdown
+    const brandSales = await Order.aggregate([
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.brand',
+          amount: { $sum: { $multiply: ['$items.price', '$items.quantity'] } },
+          quantity: { $sum: '$items.quantity' }
+        }
+      },
+      { $project: { name: '$_id', amount: 1, quantity: 1, _id: 0 } },
+      { $sort: { amount: -1 } }
+    ]);
+
     // Get monthly sales breakdown
     const monthlySales = await Order.aggregate([
       {
@@ -146,13 +160,13 @@ const getSalesReport = async (req, res) => {
     let chartData = null;
 
     try {
-      // Get sales prediction from ML API
-      const predictionResponse = await axios.post(`${ML_API_URL}/api/sales-prediction`, {
+      // Get sales prediction from ML API (Python Flask service on port 8000)
+      const predictionResponse = await axios.post(`http://127.0.0.1:8000/api/sales-prediction`, {
         salesData: allOrders
       });
       prediction = predictionResponse.data;
 
-      // Use the same productSales data for chart instead of calling ML API
+      // Use the productSales data for chart
       chartData = {
         chartData: productSales.slice(0, 10).map(item => ({
           product: item.name,
@@ -163,11 +177,11 @@ const getSalesReport = async (req, res) => {
         topProduct: productSales[0] ? [productSales[0].name, productSales[0].amount] : null
       };
     } catch (mlError) {
-      console.log('ML API not available, using fallback data');
-      // Fallback prediction
+      console.log('ML API not available or error occurred, using fallback calculations');
+      // Fallback prediction logic
       prediction = {
         prediction: totalSales * 1.15,
-        confidence: 0.6,
+        confidence: 0.75,
         trend: 'upward'
       };
       // Fallback chart data
@@ -175,7 +189,7 @@ const getSalesReport = async (req, res) => {
         chartData: productSales.slice(0, 5).map(item => ({
           product: item.name,
           sales: item.amount,
-          percentage: Math.round((item.amount / totalSales) * 100)
+          percentage: totalSales > 0 ? Math.round((item.amount / totalSales) * 100) : 0
         })),
         topProduct: productSales[0] ? [productSales[0].name, productSales[0].amount] : null
       };
@@ -183,6 +197,7 @@ const getSalesReport = async (req, res) => {
 
     res.json({
       productSales,
+      brandSales,
       monthlySales,
       totalOrders,
       totalSales,

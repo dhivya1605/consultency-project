@@ -3,6 +3,32 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { apiCall } from '../utils/api';
 import '../components/AdminPages.css';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+} from 'chart.js';
+import { Bar, Pie, Line } from 'react-chartjs-2';
+
+// Register ChartJS components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+  PointElement,
+  LineElement
+);
 
 const Reports = () => {
   const { user, token } = useAuth();
@@ -77,24 +103,24 @@ const Reports = () => {
           <div className="prediction-section">
             <h2>📈 Executive Summary</h2>
             <div className="prediction-cards">
-              <div className="prediction-card" style={{background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 100%)'}}>
+              <div className="prediction-card" style={{background: 'linear-gradient(135deg, #1a3a52 0%, #2d5a80 100%)'}}>
                 <h3>{currentMonthName} Revenue</h3>
                 <p className="prediction-value">₹{currentMonthRevenue.toLocaleString('en-IN')}</p>
                 <span className="prediction-label">Monthly volume tracking</span>
               </div>
-              <div className="prediction-card" style={{background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'}}>
+              <div className="prediction-card" style={{background: 'linear-gradient(135deg, #1a3a52 0%, #2d5a80 100%)'}}>
                 <h3>Total Revenue</h3>
                 <p className="prediction-value">₹{reportData.totalSales?.toLocaleString('en-IN')}</p>
                 <span className="prediction-label">All-time sales volume</span>
               </div>
               {reportData.prediction && (
                 <>
-                  <div className="prediction-card" style={{background: 'linear-gradient(135deg, #2e1065 0%, #4c1d95 100%)'}}>
+                  <div className="prediction-card" style={{background: 'linear-gradient(135deg, #1a3a52 0%, #2d5a80 100%)'}}>
                     <h3>{nextMonthName} Forecast</h3>
                     <p className="prediction-value">₹{Math.round(reportData.prediction.prediction).toLocaleString('en-IN')}</p>
                     <span className="prediction-label">AI Predictions</span>
                   </div>
-                  <div className="prediction-card" style={{background: 'linear-gradient(135deg, #164e63 0%, #155e75 100%)'}}>
+                  <div className="prediction-card" style={{background: 'linear-gradient(135deg, #1a3a52 0%, #2d5a80 100%)'}}>
                     <h3>Trend Analysis</h3>
                     <p className="prediction-value" style={{textTransform: 'capitalize'}}>
                       {reportData.prediction.trend === 'upward' ? '📈 Upward' : '📉 Downward'}
@@ -186,6 +212,118 @@ const Reports = () => {
                 </div>
              </div>
           </div>
+
+          {/* Graphical Analytics (Moved to End) */}
+          <div className="analytics-section-end">
+            <div className="report-chart-card featured-chart">
+              <div className="chart-header">
+                <h3>🏆 Product Revenue Performance</h3>
+                <p>Top 5 products by total sales value</p>
+              </div>
+              <div className="chart-main" style={{ height: '400px' }}>
+                <Bar 
+                  data={{
+                    labels: reportData.productSales?.slice(0, 5).map(p => p.name) || [],
+                    datasets: [{
+                      label: 'Revenue',
+                      data: reportData.productSales?.slice(0, 5).map(p => p.amount) || [],
+                      backgroundColor: 'rgba(26, 58, 82, 0.9)',
+                      hoverBackgroundColor: '#1a3a52',
+                      borderRadius: 4,
+                      barThickness: 28
+                    }]
+                  }}
+                  options={{
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: { display: false },
+                      tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        titleFont: { size: 14, weight: '600' },
+                        bodyFont: { size: 13 },
+                        callbacks: {
+                          label: (item) => ` Revenue: ₹${item.raw.toLocaleString('en-IN')}`
+                        }
+                      }
+                    },
+                    scales: {
+                      x: {
+                        grid: { color: '#f1f5f9', drawBorder: false },
+                        ticks: {
+                          callback: (value) => `₹${(value/1000).toFixed(0)}k`,
+                          font: { size: 11, weight: '500' },
+                          color: '#64748b'
+                        }
+                      },
+                      y: {
+                        grid: { display: false },
+                        ticks: {
+                          font: { size: 12, weight: '600' },
+                          color: '#1a3a52',
+                          callback: function(value) {
+                            const label = this.getLabelForValue(value);
+                            return label.length > 25 ? label.substring(0, 22) + '...' : label;
+                          }
+                        }
+                      }
+                    },
+                    layout: {
+                      padding: { left: 10, right: 30, top: 10, bottom: 10 }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="analytics-charts-grid">
+              <div className="report-chart-card">
+                <div className="chart-header">
+                  <h3>🏷️ Sales Distribution by Brand</h3>
+                </div>
+                <div className="chart-main" style={{ height: '320px' }}>
+                  <Pie 
+                    data={{
+                      labels: reportData.brandSales?.slice(0, 5).map(b => b.name || 'Unknown') || [],
+                      datasets: [{
+                        data: reportData.brandSales?.slice(0, 5).map(b => b.amount) || [],
+                        backgroundColor: [
+                          '#1a3a52', // Navy
+                          '#3b82f6', // Blue
+                          '#10b981', // Emerald
+                          '#f59e0b', // Amber
+                          '#6366f1'  // Indigo
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                      }]
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { 
+                          position: 'bottom', 
+                          labels: { 
+                            usePointStyle: true,
+                            pointStyle: 'circle',
+                            padding: 20,
+                            font: { size: 12, weight: '500' }
+                          } 
+                        },
+                        tooltip: {
+                          backgroundColor: '#1e293b',
+                          padding: 12
+                        }
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </>
       )}
 
@@ -261,6 +399,43 @@ const Reports = () => {
           font-size: 1.1rem;
           font-weight: 600;
           color: #1a1a2e;
+        }
+        .analytics-section-end {
+          margin-top: 2rem;
+          display: flex;
+          flex-direction: column;
+          gap: 2rem;
+        }
+        .report-chart-card {
+          background: white;
+          padding: 2rem;
+          border-radius: 12px;
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          border: 1px solid #f1f5f9;
+        }
+        .chart-header {
+          margin-bottom: 2rem;
+        }
+        .chart-header h3 {
+          margin: 0;
+          color: #1a3a52;
+          font-size: 1.25rem;
+          font-weight: 700;
+        }
+        .chart-header p {
+          margin: 0.25rem 0 0 0;
+          color: #64748b;
+          font-size: 0.875rem;
+        }
+        .analytics-charts-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          gap: 2rem;
+        }
+        @media (max-width: 1024px) {
+          .analytics-charts-grid {
+            grid-template-columns: 1fr;
+          }
         }
       `}</style>
     </div>
