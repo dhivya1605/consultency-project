@@ -15,7 +15,6 @@ import AdminDashboardMain from './components/AdminDashboardMain';
 import AdminProducts from './components/AdminProducts';
 import AdminOrders from './components/AdminOrders';
 import AdminUsers from './components/AdminUsers';
-import AdminAnalytics from './components/AdminAnalytics';
 import Profile from './components/Profile';
 import Recommendations from './components/Recommendations';
 import Reports from './pages/Reports';
@@ -46,7 +45,6 @@ function App() {
             <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/reports" element={<Reports />} />
 
             {/* Catch all */}

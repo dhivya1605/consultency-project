@@ -80,13 +80,6 @@ const AdminNavigation = () => {
             Users Management
           </Link>
           <Link 
-            to="/admin/analytics" 
-            onClick={handleNavClick}
-            className={`admin-nav-link ${isActive('/admin/analytics') ? 'active' : ''}`}
-          >
-            Analytics
-          </Link>
-          <Link 
             to="/admin/reports" 
             onClick={handleNavClick}
             className={`admin-nav-link ${isActive('/admin/reports') ? 'active' : ''}`}

@@ -127,6 +127,21 @@ const getSalesReport = async (req, res) => {
     // Get all orders for ML prediction
     const allOrders = await Order.find().sort({ orderDate: -1 });
 
+    // Get monthly sales breakdown
+    const monthlySales = await Order.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: '$orderDate' },
+            month: { $month: '$orderDate' }
+          },
+          totalSales: { $sum: '$totalAmount' },
+          orderCount: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': -1, '_id.month': -1 } }
+    ]);
+
     let prediction = null;
     let chartData = null;
 
@@ -168,6 +183,7 @@ const getSalesReport = async (req, res) => {
 
     res.json({
       productSales,
+      monthlySales,
       totalOrders,
       totalSales,
       prediction,
