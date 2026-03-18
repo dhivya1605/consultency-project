@@ -24,6 +24,8 @@ const UserSchema = new mongoose.Schema({
     zipCode: String,
     country: String
   },
+  savedAddress: String,
+  savedPhone: String,
   role: {
     type: String,
     enum: ['user', 'admin'],

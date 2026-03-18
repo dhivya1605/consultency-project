@@ -33,15 +33,24 @@ export const CATEGORY_SPECIFICATIONS = {
     { name: 'Capacity', type: 'dropdown', values: ['0.75 Ton', '1 Ton', '1.5 Ton', '2 Ton', '2.5 Ton'], required: true },
     { name: 'AC Type', type: 'dropdown', values: ['Split', 'Window', 'Portable'], required: true },
     { name: 'Energy Rating', type: 'dropdown', values: ['1 Star', '2 Star', '3 Star', '4 Star', '5 Star'], required: true },
-    { name: 'Compressor Type', type: 'dropdown', values: ['Inverter', 'Non-Inverter'], required: true },
-    { name: 'Cooling Capacity', type: 'number', min: 5000, max: 24000, unit: 'BTU', required: true },
-    { name: 'Power Consumption', type: 'number', min: 500, max: 3000, unit: 'W', required: true },
-    { name: 'Air Flow', type: 'number', min: 200, max: 1000, unit: 'CFM', required: true },
-    { name: 'Refrigerant Type', type: 'dropdown', values: ['R32', 'R410A', 'R22'], required: true }
+    { name: 'Compressor Type', type: 'dropdown', values: ['Inverter', 'Non-Inverter'], required: true }
   ],
   'Microwave Oven': [
     { name: 'Capacity', type: 'number', min: 10, max: 50, unit: 'Litres', required: true },
     { name: 'Microwave Type', type: 'dropdown', values: ['Solo', 'Grill', 'Convection'], required: true },
     { name: 'Power Consumption', type: 'number', min: 500, max: 2500, unit: 'W', required: true }
+  ],
+  'Table Fan': [
+    { name: 'Fan Type', type: 'dropdown', values: ['Table fan', 'Personal fan', 'Floor fan'], required: true },
+    { name: 'Blade Size (Sweep)', type: 'number', min: 100, max: 600, unit: 'mm', required: true },
+    { name: 'Power Consumption', type: 'number', min: 5, max: 150, unit: 'W', required: true },
+    { name: 'Speed Settings', type: 'number', min: 1, max: 5, required: true }
+  ],
+  'Air Cooler': [
+    { name: 'Cooler Type', type: 'dropdown', values: ['Desert', 'Personal', 'Tower', 'Window'], required: true },
+    { name: 'Water Tank Capacity', type: 'number', min: 1, max: 150, unit: 'Litres', required: true },
+    { name: 'Cooling Area', type: 'number', min: 50, max: 1000, unit: 'sq ft', required: true },
+    { name: 'Cooling Media', type: 'dropdown', values: ['Honeycomb', 'Aspen pads'], required: true },
+    { name: 'Power Consumption', type: 'number', min: 30, max: 500, unit: 'W', required: true }
   ]
 };

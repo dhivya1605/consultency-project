@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProducts } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import Carousel from './Carousel';
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
@@ -66,9 +67,12 @@ const ProductList = () => {
   // Get available brands based on selected category
   const availableBrands = {
     'TV': ['Samsung', 'LG', 'Sony', 'TCL', 'Panasonic', 'OnePlus'],
-    'Washing Machine': ['Samsung', 'LG', 'IFB', 'Bosch', 'Whirlpool', 'Godrej'],
-    'Fridge': ['Samsung', 'LG', 'Whirlpool', 'Godrej', 'Haier', 'Voltas'],
-    'Microwave Oven': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch']
+    'Washing Machine': ['Samsung', 'LG', 'Whirlpool'],
+    'Fridge': ['Samsung', 'LG', 'Whirlpool', 'Godrej'],
+    'Microwave Oven': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch'],
+    'AC': ['LG', 'Samsung', 'Whirlpool'],
+    'Table Fan': ['Usha', 'Bajaj', 'Crompton', 'Havells'],
+    'Air Cooler': ['Symphony', 'Bajaj', 'Crompton', 'Havells', 'Orient', 'Kenstar', 'Orient Electric', 'Blue Star']
   }[filters.category] || [];
 
   const handleImageError = (e) => {
@@ -85,8 +89,10 @@ const ProductList = () => {
   };
 
   return (
-    <div className="product-list">
-      <div className="filters">
+    <>
+      {!user && <Carousel />}
+      <div className="product-list">
+        <div className="filters">
         <input
           type="text"
           name="search"
@@ -100,6 +106,9 @@ const ProductList = () => {
           <option value="Washing Machine">🧺 Washing Machine</option>
           <option value="Fridge">❄️ Fridge</option>
           <option value="Microwave Oven">🍳 Microwave Oven</option>
+          <option value="AC">❄️ AC</option>
+          <option value="Table Fan">🌀 Table Fan</option>
+          <option value="Air Cooler">🌬️ Air Cooler</option>
         </select>
         <select name="brand" value={filters.brand} onChange={handleFilterChange} disabled={!filters.category}>
           <option value="">All Brands</option>
@@ -146,6 +155,7 @@ const ProductList = () => {
         </>
       )}
     </div>
+    </>
   );
 };
 

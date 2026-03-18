@@ -4,74 +4,55 @@ const Product = require('../models/Product');
 // Add to cart
 const addToCart = async (req, res) => {
   try {
-    const { productId, quantity, price } = req.body;
+    const { productId, quantity, price, productName, brand, image } = req.body;
     const userId = req.userId;
 
-    // Log for debugging
-    console.log('Add to Cart - userId:', userId, 'productId:', productId, 'quantity:', quantity, 'price:', price);
-
-    // Try to find product by MongoDB ObjectId first
     let product = null;
     let productPrice = price || 0;
-    
+    let pName = productName || '';
+    let pBrand = brand || '';
+    let pImage = image || '';
+
     try {
-      if (productId.toString().length === 24) { // MongoDB ObjectId length
+      if (productId.toString().length === 24) {
         product = await Product.findById(productId);
         if (product) {
           productPrice = product.price;
+          pName = product.name || pName;
+          pBrand = product.brand || pBrand;
+          pImage = product.image || product.imageUrl || pImage;
         }
       }
     } catch (err) {
-      console.log('Product not found as MongoDB ObjectId, using external product');
+      console.log('Product not found as MongoDB ObjectId, using request data');
     }
 
-    // If no product found in DB, use the price from request (for external API products)
     if (!product && !price) {
-      return res.status(400).json({ message: 'Product price is required for external products' });
+      return res.status(400).json({ message: 'Product price is required' });
     }
 
     let cart = await Cart.findOne({ userId });
 
     if (!cart) {
-      // Create new cart
       cart = new Cart({
         userId,
-        items: [
-          {
-            productId: productId,
-            quantity,
-            price: productPrice
-          }
-        ]
+        items: [{ productId, quantity, price: productPrice, productName: pName, brand: pBrand, image: pImage }]
       });
-      console.log('Created new cart');
     } else {
-      // Check if item already exists
-      const existingItemIndex = cart.items.findIndex(
+      const existingIndex = cart.items.findIndex(
         item => item.productId.toString() === productId.toString()
       );
 
-      if (existingItemIndex > -1) {
-        // Update quantity if item exists
-        cart.items[existingItemIndex].quantity += quantity;
-        console.log('Updated existing item quantity');
+      if (existingIndex > -1) {
+        cart.items[existingIndex].quantity += quantity;
       } else {
-        // Add new item to cart
-        cart.items.push({
-          productId: productId,
-          quantity,
-          price: productPrice
-        });
-        console.log('Added new item to cart');
+        cart.items.push({ productId, quantity, price: productPrice, productName: pName, brand: pBrand, image: pImage });
       }
     }
 
-    // Calculate total price
     cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    
-    // Save cart
+    cart.updatedAt = new Date();
     await cart.save();
-    console.log('Cart saved successfully');
 
     res.json({ message: 'Product added to cart', cart });
   } catch (error) {
@@ -84,7 +65,7 @@ const addToCart = async (req, res) => {
 const getCart = async (req, res) => {
   try {
     const userId = req.userId;
-    const cart = await Cart.findOne({ userId }).populate('items.productId');
+    const cart = await Cart.findOne({ userId });
 
     if (!cart) {
       return res.json({ items: [], totalPrice: 0 });
@@ -96,23 +77,17 @@ const getCart = async (req, res) => {
   }
 };
 
-// Update cart item
+// Update cart item quantity
 const updateCartItem = async (req, res) => {
   try {
     const userId = req.userId;
     const { productId, quantity } = req.body;
 
     const cart = await Cart.findOne({ userId });
-
-    if (!cart) {
-      return res.status(404).json({ message: 'Cart not found' });
-    }
+    if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
     const item = cart.items.find(item => item.productId.toString() === productId);
-
-    if (!item) {
-      return res.status(404).json({ message: 'Item not in cart' });
-    }
+    if (!item) return res.status(404).json({ message: 'Item not in cart' });
 
     if (quantity <= 0) {
       cart.items = cart.items.filter(item => item.productId.toString() !== productId);
@@ -121,6 +96,7 @@ const updateCartItem = async (req, res) => {
     }
 
     cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    cart.updatedAt = new Date();
     await cart.save();
 
     res.json({ message: 'Cart updated', cart });
@@ -136,13 +112,11 @@ const removeFromCart = async (req, res) => {
     const { productId } = req.body;
 
     const cart = await Cart.findOne({ userId });
-
-    if (!cart) {
-      return res.status(404).json({ message: 'Cart not found' });
-    }
+    if (!cart) return res.status(404).json({ message: 'Cart not found' });
 
     cart.items = cart.items.filter(item => item.productId.toString() !== productId);
     cart.totalPrice = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    cart.updatedAt = new Date();
     await cart.save();
 
     res.json({ message: 'Item removed from cart', cart });
@@ -157,20 +131,13 @@ const clearCart = async (req, res) => {
     const userId = req.userId;
     const cart = await Cart.findOneAndUpdate(
       { userId },
-      { items: [], totalPrice: 0 },
+      { items: [], totalPrice: 0, updatedAt: new Date() },
       { new: true }
     );
-
     res.json({ message: 'Cart cleared', cart });
   } catch (error) {
     res.status(500).json({ message: 'Failed to clear cart', error: error.message });
   }
 };
 
-module.exports = {
-  addToCart,
-  getCart,
-  updateCartItem,
-  removeFromCart,
-  clearCart
-};
+module.exports = { addToCart, getCart, updateCartItem, removeFromCart, clearCart };

@@ -7,10 +7,12 @@ import './AdminProducts.css';
 // Category and Brand mapping
 const CATEGORY_BRAND_MAP = {
   'TV': ['Samsung', 'LG', 'Sony', 'TCL', 'Panasonic', 'OnePlus','VU CALIFORNIA'],
-  'Washing Machine': ['Samsung', 'LG', 'IFB', 'Bosch', 'Whirlpool', 'Godrej'],
-  'Fridge': ['Samsung', 'LG', 'Whirlpool', 'Godrej', 'Haier', 'Voltas'],
+  'Washing Machine': ['Samsung', 'LG', 'Whirlpool'],
+  'Fridge': ['Samsung', 'LG', 'Whirlpool', 'Godrej'],
   'Microwave Oven': ['Samsung', 'LG', 'Godrej', 'IFB', 'Bosch'],
-  'AC': ['LG', 'Voltas', 'Samsung', 'Daikin', 'Lloyd', 'Blue Star', 'Hitachi']
+  'AC': ['LG', 'Samsung', 'Whirlpool'],
+  'Table Fan': ['Usha', 'Bajaj', 'Crompton', 'Havells'],
+  'Air Cooler': ['Symphony', 'Bajaj', 'Crompton', 'Havells', 'Orient', 'Kenstar', 'Orient Electric', 'Blue Star']
 };
 
 const AdminProducts = () => {
@@ -464,7 +466,7 @@ const AdminProducts = () => {
   return (
     <div className="admin-container">
       <div className="products-header">
-        <h1>📦 Products Management</h1>
+        <h1>Products Management</h1>
         <button onClick={() => setShowForm(true)} className="add-btn">
           + Add New Product
         </button>
@@ -476,7 +478,7 @@ const AdminProducts = () => {
           <div className="modal-container">
             <div className="modal-content">
               <div className="modal-header">
-                <h2>{editingId ? '✏ Edit Product' : '➕ Add New Product'}</h2>
+                <h2>{editingId ? 'Edit Product' : 'Add New Product'}</h2>
                 <button className="modal-close" onClick={handleCancel}>✕</button>
               </div>
               
@@ -696,7 +698,7 @@ const AdminProducts = () => {
                       required={!editingId}
                     />
                     <label htmlFor="image-upload" className="file-upload-label">
-                      <span className="upload-icon">📤</span>
+                      <span className="upload-icon"></span>
                       <span>Click to upload or drag & drop</span>
                       <span className="file-hint">JPG, PNG, or WebP (max 5MB)</span>
                     </label>
@@ -705,7 +707,7 @@ const AdminProducts = () => {
 
                 <div className="form-buttons">
                   <button type="submit" className="save-btn">
-                    {editingId ? '💾 Update Product' : '✅ Add Product'}
+                    {editingId ? 'Update Product' : 'Add Product'}
                   </button>
                   <button type="button" onClick={handleCancel} className="cancel-btn">
                     ✕ Cancel
@@ -721,7 +723,7 @@ const AdminProducts = () => {
         <div className="search-box">
           <input
             type="text"
-            placeholder="🔍 Search products by name or category..."
+            placeholder="Search products by name or category..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="search-input"
@@ -735,8 +737,8 @@ const AdminProducts = () => {
             className="filter-select"
           >
             <option value="all">All Products</option>
-            <option value="visible">✅ Visible</option>
-            <option value="hidden">🙈 Hidden</option>
+            <option value="visible">Visible</option>
+            <option value="hidden">Hidden</option>
           </select>
         </div>
 
@@ -775,33 +777,35 @@ const AdminProducts = () => {
                   </td>
                   <td className="status">
                     {product.visible ? (
-                      <span className="status-visible">👁 Visible</span>
+                      <span className="status-visible">Visible</span>
                     ) : (
-                      <span className="status-hidden">🙈 Hidden</span>
+                      <span className="status-hidden">Hidden</span>
                     )}
                   </td>
-                  <td className="actions">
-                    <button
-                      className={`action-btn visibility-btn ${product.visible ? 'hide' : 'show'}`}
-                      onClick={() => handleToggleVisibility(product._id, product.visible)}
-                      title={product.visible ? 'Hide product' : 'Show product'}
-                    >
-                      {product.visible ? '👁 Hide' : '✅ Show'}
-                    </button>
-                    <button
-                      className="action-btn edit-btn"
-                      onClick={() => handleEdit(product)}
-                      title="Edit product"
-                    >
-                      ✏ Edit
-                    </button>
-                    <button
-                      className="action-btn delete-btn"
-                      onClick={() => handleDelete(product._id)}
-                      title="Delete product"
-                    >
-                      🗑 Delete
-                    </button>
+                  <td>
+                    <div className="actions">
+                      <button
+                        className={`action-btn visibility-btn ${product.visible ? 'hide' : 'show'}`}
+                        onClick={() => handleToggleVisibility(product._id, product.visible)}
+                        title={product.visible ? 'Hide product' : 'Show product'}
+                      >
+                        {product.visible ? 'Hide' : 'Show'}
+                      </button>
+                      <button
+                        className="action-btn edit-btn"
+                        onClick={() => handleEdit(product)}
+                        title="Edit product"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="action-btn delete-btn"
+                        onClick={() => handleDelete(product._id)}
+                        title="Delete product"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

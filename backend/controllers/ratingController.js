@@ -6,17 +6,8 @@ const getProductReviews = async (req, res) => {
   try {
     const { productId } = req.params;
     
-    // Find all orders that contain this product
-    const orders = await Order.find({
-      'items.productId': productId
-    }).select('_id');
-    
-    const orderIds = orders.map(o => o._id);
-    
-    // Get all ratings for those orders
-    const reviews = await Rating.find({
-      orderId: { $in: orderIds }
-    })
+    // Get all ratings for this product directly
+    const reviews = await Rating.find({ productId })
       .populate('userId', 'name email')
       .sort({ createdAt: -1 });
     
@@ -46,6 +37,7 @@ const submitRating = async (req, res) => {
     const newRating = new Rating({
       userId,
       orderId,
+      productId, // Added this field
       rating,
       comment
     });

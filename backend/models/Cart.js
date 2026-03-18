@@ -12,12 +12,15 @@ const CartSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed,
         required: true
       },
+      productName: { type: String, default: '' },
+      brand: { type: String, default: '' },
       quantity: {
         type: Number,
         required: true,
         min: 1
       },
       price: Number,
+      image: { type: String, default: '' },
       addedAt: {
         type: Date,
         default: Date.now

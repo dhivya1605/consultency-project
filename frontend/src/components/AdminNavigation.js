@@ -41,10 +41,10 @@ const AdminNavigation = () => {
           >
             ☰
           </button>
-          <Link to="/admin" className="admin-logo">⚡ Sun Electroniks Admin</Link>
+          <Link to="/admin" className="admin-logo">Sun Electroniks Admin</Link>
         </div>
         <div className="admin-header-right">
-          <span className="admin-user">👤 {user?.name}</span>
+          <span className="admin-user">{user?.name}</span>
           <button onClick={handleLogout} className="logout-btn">Logout</button>
         </div>
       </div>
@@ -56,49 +56,49 @@ const AdminNavigation = () => {
             onClick={handleNavClick}
             className={`admin-nav-link ${isActive('/admin') ? 'active' : ''}`}
           >
-            📊 Dashboard
+            Dashboard
           </Link>
           <Link 
             to="/admin/products" 
             onClick={handleNavClick}
             className={`admin-nav-link ${isActive('/admin/products') ? 'active' : ''}`}
           >
-            📦 Products Management
+            Products Management
           </Link>
           <Link 
             to="/admin/orders" 
             onClick={handleNavClick}
             className={`admin-nav-link ${isActive('/admin/orders') ? 'active' : ''}`}
           >
-            🛒 Orders Management
+            Orders Management
           </Link>
           <Link 
             to="/admin/users" 
             onClick={handleNavClick}
             className={`admin-nav-link ${isActive('/admin/users') ? 'active' : ''}`}
           >
-            👥 Users Management
+            Users Management
           </Link>
           <Link 
             to="/admin/analytics" 
             onClick={handleNavClick}
             className={`admin-nav-link ${isActive('/admin/analytics') ? 'active' : ''}`}
           >
-            📈 Analytics
+            Analytics
           </Link>
           <Link 
             to="/admin/reports" 
             onClick={handleNavClick}
             className={`admin-nav-link ${isActive('/admin/reports') ? 'active' : ''}`}
           >
-            📊 Reports
+            Reports
           </Link>
           <hr style={{margin: '1rem 0', opacity: 0.3}} />
           <button 
             onClick={handleLogout}
             className="admin-nav-link logout-link"
           >
-            🚪 Logout
+            Logout
           </button>
         </nav>
       </div>

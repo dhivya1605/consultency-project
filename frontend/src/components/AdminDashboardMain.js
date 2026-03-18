@@ -64,7 +64,7 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-container">
-      <h1>📊 Dashboard</h1>
+      <h1>Dashboard</h1>
       
       {loading ? (
         <p>Loading statistics...</p>
@@ -72,7 +72,7 @@ const AdminDashboard = () => {
           <>
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-icon">📦</div>
+                <div className="stat-icon"></div>
                 <div className="stat-content">
                   <h3>Total Products</h3>
                   <p className="stat-value">{stats.totalProducts}</p>
@@ -80,7 +80,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon">🛒</div>
+                <div className="stat-icon"></div>
                 <div className="stat-content">
                   <h3>Total Orders</h3>
                   <p className="stat-value">{stats.totalOrders}</p>
@@ -88,7 +88,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="stat-card">
-                <div className="stat-icon">👥</div>
+                <div className="stat-icon"></div>
                 <div className="stat-content">
                   <h3>Total Users</h3>
                   <p className="stat-value">{stats.totalUsers}</p>
@@ -96,7 +96,7 @@ const AdminDashboard = () => {
               </div>
 
               <div className="stat-card revenue-card">
-                <div className="stat-icon">💰</div>
+                <div className="stat-icon"></div>
                 <div className="stat-content">
                   <h3>Total Revenue</h3>
                   <p className="stat-value">₹{stats.revenue.toLocaleString('en-IN')}</p>
@@ -106,7 +106,7 @@ const AdminDashboard = () => {
 
             {stats.lowStockProducts.length > 0 && (
               <div className="alert-section">
-                <h3>⚠️ Low Stock Alerts</h3>
+                <h3>Low Stock Alerts</h3>
                 <div className="low-stock-list">
                   {stats.lowStockProducts.map(product => (
                     <div key={product._id} className="low-stock-item">
@@ -125,25 +125,25 @@ const AdminDashboard = () => {
                   className="action-btn"
                   onClick={() => navigate('/admin/products')}
                 >
-                  📦 Manage Products
+                  Manage Products
                 </button>
                 <button 
                   className="action-btn"
                   onClick={() => navigate('/admin/orders')}
                 >
-                  🛒 View Orders
+                  View Orders
                 </button>
                 <button 
                   className="action-btn"
                   onClick={() => navigate('/admin/users')}
                 >
-                  👥 Manage Users
+                  Manage Users
                 </button>
                 <button 
                   className="action-btn"
                   onClick={() => navigate('/admin/analytics')}
                 >
-                  📈 View Analytics
+                  View Analytics
                 </button>
               </div>
             </div>

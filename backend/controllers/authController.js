@@ -46,15 +46,13 @@ const registerUser = async (req, res) => {
 
     // include email in token for later authorization checks
     const token = generateToken(user._id, user.role, user.email);
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
     res.status(201).json({
       message: 'User registered successfully',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: userResponse
     });
   } catch (error) {
     res.status(500).json({ message: 'Registration failed', error: error.message });
@@ -77,15 +75,13 @@ const loginUser = async (req, res) => {
     }
 
     const token = generateToken(user._id, user.role, user.email);
+    const userResponse = user.toObject();
+    delete userResponse.password;
+
     res.json({
       message: 'Login successful',
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      }
+      user: userResponse
     });
   } catch (error) {
     res.status(500).json({ message: 'Login failed', error: error.message });

@@ -7,7 +7,9 @@ import ProductList from './components/ProductList';
 import ProductDetail from './components/ProductDetail';
 import Cart from './components/Cart';
 import Checkout from './components/Checkout';
+import SimulatedPayment from './components/SimulatedPayment';
 import OrderConfirmation from './components/OrderConfirmation';
+import OrderTracking from './components/OrderTracking';
 import LoginRegister from './components/LoginRegister';
 import AdminDashboardMain from './components/AdminDashboardMain';
 import AdminProducts from './components/AdminProducts';
@@ -32,11 +34,13 @@ function App() {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/payment" element={<SimulatedPayment />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            <Route path="/my-orders" element={<OrderTracking />} />
             <Route path="/auth" element={<LoginRegister />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/recommendations" element={<Recommendations />} />
-            
+
             {/* Admin Routes */}
             <Route path="/admin" element={<AdminDashboardMain />} />
             <Route path="/admin/products" element={<AdminProducts />} />

@@ -54,7 +54,7 @@ const AdminUsers = () => {
 
   return (
     <div className="admin-container">
-      <h1>👥 Users Management</h1>
+      <h1>Users Management</h1>
 
       {loading ? (
         <p>Loading users...</p>
@@ -77,7 +77,7 @@ const AdminUsers = () => {
                 {users.map(u => (
                   <tr key={u._id}>
                     <td className="user-name">
-                      <span className="user-avatar">👤</span>
+                      <span className="user-avatar"></span>
                       {u.name}
                     </td>
                     <td className="email">{u.email}</td>
@@ -88,7 +88,7 @@ const AdminUsers = () => {
                     </td>
                     <td>
                       <span className={`status ${u.isBlocked ? 'blocked' : 'active'}`}>
-                        {u.isBlocked ? '🚫 Blocked' : '✅ Active'}
+                        {u.isBlocked ? 'Blocked' : 'Active'}
                       </span>
                     </td>
                     <td>{new Date(u.createdAt).toLocaleDateString('en-IN')}</td>
@@ -97,7 +97,7 @@ const AdminUsers = () => {
                         className={`action-btn ${u.isBlocked ? 'unblock' : 'block'}`}
                         onClick={() => handleBlockUser(u._id, u.isBlocked)}
                       >
-                        {u.isBlocked ? '🔓 Unblock' : '🚫 Block'}
+                        {u.isBlocked ? 'Unblock' : 'Block'}
                       </button>
                     </td>
                   </tr>

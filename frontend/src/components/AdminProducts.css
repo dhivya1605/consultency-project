@@ -526,6 +526,7 @@ input:checked + .slider:before {
 .products-table tbody td {
   padding: 1rem;
   font-size: 0.95rem;
+  vertical-align: middle;
 }
 
 .products-table tbody td:first-child {

@@ -4,8 +4,10 @@ import { useAuth } from '../context/AuthContext';
 
 const RatingModal = ({ orderId, productId, onClose, onSubmit }) => {
   const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
   const [comment, setComment] = useState('');
   const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const { token } = useAuth();
 
   const handleSubmit = async () => {
@@ -18,53 +20,90 @@ const RatingModal = ({ orderId, productId, onClose, onSubmit }) => {
     try {
       await axios.post('http://localhost:5000/api/ratings/submit', {
         orderId,
-        productId, // Correctly pass the productId
+        productId,
         rating,
         comment
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      onSubmit();
-      onClose();
+      setSubmitted(true);
+      // Wait 2 seconds then call the original onSubmit to close
+      setTimeout(() => {
+        onSubmit();
+      }, 2000);
     } catch (error) {
       console.error('Failed to submit rating:', error);
-      alert(`Failed to submit rating: ${error.response?.data?.message || error.message}`); // Display detailed error message
+      alert(`${error.response?.data?.message || 'Failed to submit'}`);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content">
-        <h2>Rate Your Experience</h2>
+    <div className="premium-modal-overlay">
+      <div className="premium-modal-content">
+        <button className="close-modal-btn" onClick={onClose}>&times;</button>
         
-        <div className="star-rating">
-          {[1, 2, 3, 4, 5].map(star => (
-            <span
-              key={star}
-              className={`star ${star <= rating ? 'active' : ''}`}
-              onClick={() => setRating(star)}
-            >
-              ⭐
-            </span>
-          ))}
+        <div className="modal-header">
+          <h2>Review Product</h2>
+          <p>How was your experience with this item?</p>
         </div>
+        
+        {submitted ? (
+          <div className="rating-success-state">
+            <div className="success-icon">✅</div>
+            <h2>Thank You!</h2>
+            <p>Your feedback helps us improve.</p>
+          </div>
+        ) : (
+          <>
+            <div className="premium-star-rating">
+              {[1, 2, 3, 4, 5].map(star => (
+                <button
+                  key={star}
+                  type="button"
+                  className={`premium-star ${star <= (hover || rating) ? 'active' : ''}`}
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHover(star)}
+                  onMouseLeave={() => setHover(0)}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
 
-        <textarea
-          placeholder="Share your feedback (optional)"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          className="comment-input"
-        />
+            <div className="rating-desc">
+              {rating === 1 && "Poor"}
+              {rating === 2 && "Fair"}
+              {rating === 3 && "Good"}
+              {rating === 4 && "Very Good"}
+              {rating === 5 && "Excellent"}
+            </div>
 
-        <div className="modal-actions">
-          <button onClick={handleSubmit} disabled={loading} className="submit-btn">
-            {loading ? 'Submitting...' : 'Submit Rating'}
-          </button>
-          <button onClick={onClose} className="cancel-btn">Skip</button>
-        </div>
+            <div className="premium-form-group">
+              <label>Share your opinion</label>
+              <textarea
+                placeholder="What did you like or dislike?..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                className="premium-textarea"
+                rows={4}
+              />
+            </div>
+
+            <div className="premium-modal-actions">
+              <button 
+                onClick={handleSubmit} 
+                disabled={loading} 
+                className="premium-submit-btn"
+              >
+                {loading ? 'Submitting...' : 'Submit Feedback'}
+              </button>
+              <button onClick={onClose} className="premium-cancel-btn">Maybe Later</button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

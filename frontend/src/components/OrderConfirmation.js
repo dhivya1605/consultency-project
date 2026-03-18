@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -17,104 +17,146 @@ const OrderConfirmation = () => {
   }, [location, navigate]);
 
   if (!orderData) {
-    return <div>Loading...</div>;
+    return <div className="page-loading">Loading...</div>;
   }
 
   const estimatedDelivery = new Date();
-  estimatedDelivery.setDate(
-    estimatedDelivery.getDate() + (orderData.deliveryType === 'express' ? 2 : 5)
-  );
+  estimatedDelivery.setDate(estimatedDelivery.getDate() + 5);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+  const formatDate = (d) => {
+    return new Date(d).toLocaleDateString('en-IN', {
+      day: '2-digit', month: 'long', year: 'numeric'
+    });
   };
 
+  const isOnline = orderData.paymentMethod === 'online';
+
   return (
-    <div className="confirmation-container">
+    <div className="confirmation-page">
       <div className="confirmation-card">
+
+        {/* Header */}
         <div className="confirmation-header">
-          <div className="checkmark">✓</div>
+          <div className={`confirmation-checkmark ${isOnline ? 'paid' : 'cod'}`}>✓</div>
           <h1>Order Placed Successfully!</h1>
-          <p className="order-id">Order ID: #{Math.random().toString(36).substr(2, 9).toUpperCase()}</p>
-        </div>
+          <p className="conf-subtext">
+            {isOnline ? 'Payment confirmed. Your order is being processed.' : 'Your COD order has been placed successfully.'}
+          </p>
 
-        <div className="confirmation-section">
-          <h2>Order Summary</h2>
-          <div className="order-details">
-            <div className="detail-row">
-              <span>Delivery Address:</span>
-              <span className="detail-value">{orderData.deliveryAddress}</span>
+          <div className="conf-order-meta">
+            <div className="conf-meta-chip">
+              Order #{orderData._id?.slice(-6).toUpperCase()}
             </div>
-            <div className="detail-row">
-              <span>Phone Number:</span>
-              <span className="detail-value">{orderData.phoneNumber}</span>
-            </div>
-            <div className="detail-row">
-              <span>Delivery Type:</span>
-              <span className="detail-value">
-                {orderData.deliveryType === 'express' ? '⚡ Express (1-2 days)' : '📦 Standard (3-5 days)'}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span>Payment Method:</span>
-              <span className="detail-value">
-                {orderData.paymentMethod === 'cod' 
-                  ? '💵 Cash on Delivery' 
-                  : '📅 Scheduled Payment'}
-              </span>
-            </div>
-            <div className="detail-row">
-              <span>Estimated Delivery:</span>
-              <span className="detail-value">{formatDate(estimatedDelivery)}</span>
+            <div className={`conf-payment-chip ${isOnline ? 'chip-paid' : 'chip-cod'}`}>
+              {isOnline ? '💳 Paid Online' : '💵 Cash on Delivery'}
             </div>
           </div>
         </div>
 
-        <div className="confirmation-section">
-          <h2>Items Ordered</h2>
-          <div className="items-list">
-            {orderData.items && orderData.items.map((item, index) => (
-              <div key={index} className="confirmation-item">
-                <span>{item.name || item.title}</span>
-                <span className="item-amount">₹{item.price}</span>
+        {/* Status Tracker */}
+        <div className="conf-status-banner">
+          <div className="conf-status-step active">
+            <div className="conf-status-dot">✓</div>
+            <span>Placed</span>
+          </div>
+          <div className="conf-status-line" />
+          <div className="conf-status-step">
+            <div className="conf-status-dot">2</div>
+            <span>Packed</span>
+          </div>
+          <div className="conf-status-line" />
+          <div className="conf-status-step">
+            <div className="conf-status-dot">3</div>
+            <span>Shipped</span>
+          </div>
+          <div className="conf-status-line" />
+          <div className="conf-status-step">
+            <div className="conf-status-dot">4</div>
+            <span>Out for Delivery</span>
+          </div>
+          <div className="conf-status-line" />
+          <div className="conf-status-step">
+            <div className="conf-status-dot">5</div>
+            <span>Delivered</span>
+          </div>
+        </div>
+
+        {/* Delivery Info */}
+        <div className="conf-info-grid">
+          <div className="conf-info-block">
+            <h4>Delivery Address</h4>
+            <p>{orderData.deliveryAddress}</p>
+            {orderData.phoneNumber && <p>📞 {orderData.phoneNumber}</p>}
+          </div>
+          <div className="conf-info-block">
+            <h4>Estimated Delivery</h4>
+            <p className="conf-delivery-date">{formatDate(estimatedDelivery)}</p>
+            <p className="conf-delivery-note">Standard delivery (3-5 business days)</p>
+          </div>
+        </div>
+
+        {/* Items */}
+        <div className="conf-items-section">
+          <h3>Items Ordered</h3>
+          {orderData.items?.map((item, i) => {
+            const image = item.image || item.productId?.image || '';
+            
+            const getImageUrl = (img) => {
+              if (!img) return null;
+              if (img.startsWith('http')) return img;
+              return `http://localhost:5000${img}`;
+            };
+
+            return (
+              <div key={i} className="conf-item-row-premium">
+                <div className="conf-item-main">
+                  {image ? (
+                    <div className="conf-item-img">
+                      <img src={getImageUrl(image)} alt={item.productName || item.name} />
+                    </div>
+                  ) : null}
+                  <div className="conf-item-details">
+                    <span className="conf-item-name">{item.productName || item.name}</span>
+                    <div className="conf-item-meta">
+                      {item.brand && <span className="conf-item-brand">{item.brand}</span>}
+                      <span className="conf-item-qty">Qty: {item.quantity}</span>
+                      <span className="conf-item-price">₹{(item.price).toLocaleString('en-IN')} each</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="conf-item-pricing">
+                  <span className="conf-item-total">₹{(item.price * item.quantity).toLocaleString('en-IN')}</span>
+                </div>
               </div>
-            ))}
-          </div>
-          <div className="total-amount">
-            <span>Total Amount:</span>
-            <span>₹{orderData.totalAmount}</span>
+            );
+          })}
+          <div className="conf-amount-row">
+            <strong>Total Amount</strong>
+            <strong className="conf-grand-total">₹{orderData.totalAmount?.toLocaleString('en-IN')}</strong>
           </div>
         </div>
 
-        {orderData.paymentMethod === 'scheduled' && (
-          <div className="payment-notice">
-            <h3>📧 Payment Instructions</h3>
-            <p>You will receive a payment link via email/SMS before delivery.</p>
-            <p>Payment must be made within 48 hours of delivery.</p>
+        {/* COD Notice */}
+        {!isOnline && (
+          <div className="conf-cod-notice">
+            <h4>Cash on Delivery</h4>
+            <p>Please keep ₹{orderData.totalAmount?.toLocaleString('en-IN')} ready at the time of delivery. Our delivery partner will collect the payment.</p>
           </div>
         )}
 
-        {orderData.paymentMethod === 'cod' && (
-          <div className="cod-notice">
-            <h3>💰 Cash on Delivery</h3>
-            <p>Please have the exact amount ready at the time of delivery.</p>
-            <p>Our delivery partner will collect the payment.</p>
-          </div>
-        )}
+        {/* Footer */}
+        <div className="conf-footer">
+          <p>A confirmation has been sent to <strong>{user?.email}</strong></p>
+        </div>
 
-        <div className="confirmation-actions">
-          <button onClick={() => navigate('/')} className="continue-btn">
-            Continue Shopping
-          </button>
-          <button onClick={() => navigate('/my-orders')} className="track-btn">
+        {/* Actions */}
+        <div className="conf-actions">
+          <button className="conf-track-btn" onClick={() => navigate('/profile')}>
             Track Order
           </button>
-        </div>
-
-        <div className="confirmation-footer">
-          <p>✓ A confirmation email has been sent to {user?.email}</p>
-          <p>Need help? Contact us at support@sunelectronics.com or call 1-800-SUN-ELECTRONICS</p>
+          <button className="conf-shop-btn" onClick={() => navigate('/')}>
+            Continue Shopping
+          </button>
         </div>
       </div>
     </div>

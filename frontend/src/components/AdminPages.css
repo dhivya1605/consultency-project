@@ -139,6 +139,13 @@ tbody tr:hover {
   background: #2d5a80;
 }
 
+.admin-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: flex-start;
+}
+
 .save-btn {
   background: #1a3a52;
   color: white;
@@ -159,6 +166,24 @@ tbody tr:hover {
 .action-btn.unblock {
   background: #1a3a52;
   color: white;
+}
+
+.payment-capture-btn {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+  transition: all 0.2s;
+}
+
+.payment-capture-btn:hover {
+  background: #2ecc71;
+  transform: translateY(-1px);
 }
 
 .user-name {

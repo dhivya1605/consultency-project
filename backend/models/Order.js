@@ -12,6 +12,8 @@ const OrderSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Mixed,
         required: true
       },
+      productName: { type: String, default: '' },
+      brand: { type: String, default: '' },
       name: String,
       price: Number,
       quantity: Number
@@ -24,20 +26,29 @@ const OrderSchema = new mongoose.Schema({
   deliveryAddress: {
     type: String
   },
+  phoneNumber: {
+    type: String,
+    default: ''
+  },
   paymentMethod: {
     type: String,
-    enum: ['cod', 'online', 'scheduled'],
+    enum: ['cod', 'online'],
     default: 'cod'
   },
   paymentStatus: {
     type: String,
-    enum: ['Pending', 'Completed', 'Failed'],
+    enum: ['Pending', 'Paid', 'Failed', 'Received'],
     default: 'Pending'
+  },
+  // Simulated payment transaction id
+  transactionId: {
+    type: String,
+    default: ''
   },
   orderStatus: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled'],
-    default: 'Pending'
+    enum: ['Pending', 'Placed', 'Packed', 'Shipped', 'Out for Delivery', 'Delivered', 'Cancelled'],
+    default: 'Placed'
   },
   estimatedDelivery: Date,
   orderDate: {

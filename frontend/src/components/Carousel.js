@@ -9,6 +9,7 @@ const Carousel = () => {
       title: '❄️ WINTER OFFER',
       subtitle: 'Up to 50% OFF',
       description: 'Get amazing discounts on all electronics',
+      // To use an image: bgImage: '/images/carousel/img1.jpg'
       bgImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
       offer: 'Limited Time Only'
     },
@@ -56,7 +57,11 @@ const Carousel = () => {
           <div
             key={slide.id}
             className={`carousel-slide ${index === currentSlide ? 'active' : ''}`}
-            style={{ backgroundImage: slide.bgImage }}
+            style={{ 
+              backgroundImage: slide.bgImage.startsWith('linear-gradient') 
+                ? slide.bgImage 
+                : `url(${slide.bgImage})` 
+            }}
           >
             <div className="slide-content">
               <h1 className="slide-title">{slide.title}</h1>
