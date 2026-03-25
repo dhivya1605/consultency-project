@@ -762,3 +762,138 @@ input:checked + .slider:before {
     font-size: 0.75rem;
   }
 }
+
+/* Bulk Actions Bar */
+.bulk-actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border-left: 5px solid #667eea;
+}
+
+.selected-count {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.bulk-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.bulk-btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 0.9rem;
+}
+
+.add-offer-bulk {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #4caf50;
+}
+
+.add-offer-bulk:hover {
+  background: #4caf50;
+  color: white;
+}
+
+.remove-offer-bulk {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.remove-offer-bulk:hover {
+  background: #c62828;
+  color: white;
+}
+
+/* Interactive Offer Column */
+.offer-inline-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+  width: fit-content;
+}
+
+.offer-inline-display:hover {
+  background: #f0f0f0;
+}
+
+.edit-icon-small {
+  font-size: 0.8rem;
+  opacity: 0.5;
+}
+
+.offer-inline-display:hover .edit-icon-small {
+  opacity: 1;
+}
+
+.add-offer-btn-small {
+  background: #f5f5f5;
+  color: #667eea;
+  border: 1px dashed #667eea;
+  padding: 2px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-offer-btn-small:hover {
+  background: #667eea;
+  color: white;
+  border-style: solid;
+}
+
+/* Mini Modal */
+.mini-modal {
+  max-width: 400px;
+}
+
+.header-mini {
+  padding: 1rem 1.5rem;
+}
+
+.header-mini h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.offer-quick-form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.modal-footer-mini {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

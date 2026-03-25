@@ -148,6 +148,17 @@ const ProductList = () => {
                   <h3 className="product-title-minimal">
                     {product.name || product.title}
                   </h3>
+                  <div className="product-price-container">
+                    {product.hasOffer ? (
+                      <>
+                        <span className="original-price">₹{product.price.toLocaleString('en-IN')}</span>
+                        <span className="discounted-price">₹{(product.price - (product.price * product.offerPercentage / 100)).toLocaleString('en-IN')}</span>
+                        <div className="offer-badge-mini">{product.offerPercentage}% OFF</div>
+                      </>
+                    ) : (
+                      <span className="regular-price">₹{product.price.toLocaleString('en-IN')}</span>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

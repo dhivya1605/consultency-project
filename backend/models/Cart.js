@@ -19,7 +19,9 @@ const CartSchema = new mongoose.Schema({
         required: true,
         min: 1
       },
-      price: Number,
+      price: Number, // This will be the finalPrice (discounted)
+      originalPrice: Number,
+      offerPercentage: Number,
       image: { type: String, default: '' },
       addedAt: {
         type: Date,

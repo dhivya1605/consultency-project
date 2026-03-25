@@ -77,6 +77,15 @@ const Cart = () => {
 
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.totalPrice || 0;
+  
+  // Calculate total savings
+  const totalSavings = cart.items.reduce((sum, item) => {
+    if (item.originalPrice && item.originalPrice > item.price) {
+      return sum + ((item.originalPrice - item.price) * item.quantity);
+    }
+    return sum;
+  }, 0);
+
   const deliveryCharge = subtotal > 500 ? 0 : 49;
   const total = subtotal + deliveryCharge;
 
@@ -117,7 +126,15 @@ const Cart = () => {
                 <div className="cart-card-info">
                   <h3 className="cart-product-name">{productName}</h3>
                   {brand && <p className="cart-product-brand">{brand}</p>}
-                  <p className="cart-product-price">₹{item.price?.toLocaleString('en-IN')}</p>
+                  {item.originalPrice && item.originalPrice > item.price ? (
+                    <div className="cart-item-price-info">
+                      <span className="cart-original-price">₹{item.originalPrice.toLocaleString('en-IN')}</span>
+                      <span className="cart-discounted-price">₹{item.price.toLocaleString('en-IN')}</span>
+                      <span className="cart-item-offer-badge">{item.offerPercentage}% OFF</span>
+                    </div>
+                  ) : (
+                    <p className="cart-product-price">₹{item.price?.toLocaleString('en-IN')}</p>
+                  )}
                 </div>
 
                 <div className="cart-card-controls">
@@ -163,6 +180,12 @@ const Cart = () => {
               <span>Delivery</span>
               <span>{deliveryCharge === 0 ? 'FREE' : `₹${deliveryCharge}`}</span>
             </div>
+            {totalSavings > 0 && (
+              <div className="summary-line savings-line">
+                <span>Offer Savings</span>
+                <span>- ₹{totalSavings.toLocaleString('en-IN')}</span>
+              </div>
+            )}
             {deliveryCharge === 0 && (
               <div className="free-delivery-banner">
                 You're saving ₹49 on delivery!

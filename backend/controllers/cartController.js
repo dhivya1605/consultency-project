@@ -8,7 +8,9 @@ const addToCart = async (req, res) => {
     const userId = req.userId;
 
     let product = null;
-    let productPrice = price || 0;
+    let finalPrice = price || 0;
+    let originalPrice = price || 0;
+    let offerPercentage = 0;
     let pName = productName || '';
     let pBrand = brand || '';
     let pImage = image || '';
@@ -17,7 +19,25 @@ const addToCart = async (req, res) => {
       if (productId.toString().length === 24) {
         product = await Product.findById(productId);
         if (product) {
-          productPrice = product.price;
+          originalPrice = product.price;
+          offerPercentage = product.hasOffer ? product.offerPercentage : 0;
+          
+          // Check for offer expiry
+          let isOfferValid = product.hasOffer;
+          if (product.hasOffer && product.offerExpiry) {
+            const expiry = new Date(product.offerExpiry);
+            if (new Date() > expiry) {
+              isOfferValid = false;
+              offerPercentage = 0;
+            }
+          }
+
+          if (isOfferValid) {
+            finalPrice = originalPrice - (originalPrice * offerPercentage / 100);
+          } else {
+            finalPrice = originalPrice;
+          }
+
           pName = product.name || pName;
           pBrand = product.brand || pBrand;
           pImage = product.image || product.imageUrl || pImage;
@@ -25,6 +45,8 @@ const addToCart = async (req, res) => {
       }
     } catch (err) {
       console.log('Product not found as MongoDB ObjectId, using request data');
+      finalPrice = price || 0;
+      originalPrice = price || 0;
     }
 
     if (!product && !price) {
@@ -36,7 +58,16 @@ const addToCart = async (req, res) => {
     if (!cart) {
       cart = new Cart({
         userId,
-        items: [{ productId, quantity, price: productPrice, productName: pName, brand: pBrand, image: pImage }]
+        items: [{ 
+          productId, 
+          quantity, 
+          price: finalPrice, 
+          originalPrice,
+          offerPercentage,
+          productName: pName, 
+          brand: pBrand, 
+          image: pImage 
+        }]
       });
     } else {
       const existingIndex = cart.items.findIndex(
@@ -45,8 +76,21 @@ const addToCart = async (req, res) => {
 
       if (existingIndex > -1) {
         cart.items[existingIndex].quantity += quantity;
+        // Update price in case it changed since last add
+        cart.items[existingIndex].price = finalPrice;
+        cart.items[existingIndex].originalPrice = originalPrice;
+        cart.items[existingIndex].offerPercentage = offerPercentage;
       } else {
-        cart.items.push({ productId, quantity, price: productPrice, productName: pName, brand: pBrand, image: pImage });
+        cart.items.push({ 
+          productId, 
+          quantity, 
+          price: finalPrice, 
+          originalPrice,
+          offerPercentage,
+          productName: pName, 
+          brand: pBrand, 
+          image: pImage 
+        });
       }
     }
 

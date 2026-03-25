@@ -67,6 +67,19 @@ const ProductSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
+  },
+  hasOffer: {
+    type: Boolean,
+    default: false
+  },
+  offerPercentage: {
+    type: Number,
+    default: 0,
+    min: 0,
+    max: 100
+  },
+  offerExpiry: {
+    type: Date
   }
 });
 

@@ -1,7 +1,7 @@
 .admin-header {
   background: linear-gradient(135deg, #1a3a52 0%, #2d5a80 100%);
   color: white;
-  padding: 1rem;
+  padding: 1.2rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -29,11 +29,12 @@
 }
 
 .admin-logo {
-  font-size: 1.3rem;
-  font-weight: bold;
+  font-size: 2.2rem;
+  font-weight: 800;
   text-decoration: none;
   color: white;
   transition: opacity 0.3s;
+  letter-spacing: -0.5px;
 }
 
 .admin-logo:hover {

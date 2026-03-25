@@ -1,40 +1,40 @@
 import React, { useState, useEffect } from 'react';
 
+const slides = [
+  {
+    id: 1,
+    title: '❄️ WINTER OFFER',
+    subtitle: 'Up to 50% OFF',
+    description: 'Get amazing discounts on all electronics',
+    // To use an image: bgImage: '/images/carousel/img1.jpg'
+    bgImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    offer: 'Limited Time Only'
+  },
+  {
+    id: 2,
+    title: '🎉 NEW YEAR SALE',
+    subtitle: 'Up to 60% OFF',
+    description: 'Exclusive deals on latest gadgets and electronics',
+    bgImage: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    offer: 'Grab Now!'
+  },
+  {
+    id: 3,
+    title: '⚡ FLASH DEAL',
+    subtitle: 'Up to 40% OFF',
+    description: 'Today only - Incredible savings on premium electronics',
+    bgImage: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    offer: 'Hurry Up!'
+  }
+];
+
 const Carousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  const slides = [
-    {
-      id: 1,
-      title: '❄️ WINTER OFFER',
-      subtitle: 'Up to 50% OFF',
-      description: 'Get amazing discounts on all electronics',
-      // To use an image: bgImage: '/images/carousel/img1.jpg'
-      bgImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      offer: 'Limited Time Only'
-    },
-    {
-      id: 2,
-      title: '🎉 NEW YEAR SALE',
-      subtitle: 'Up to 60% OFF',
-      description: 'Exclusive deals on latest gadgets and electronics',
-      bgImage: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      offer: 'Grab Now!'
-    },
-    {
-      id: 3,
-      title: '⚡ FLASH DEAL',
-      subtitle: 'Up to 40% OFF',
-      description: 'Today only - Incredible savings on premium electronics',
-      bgImage: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      offer: 'Hurry Up!'
-    }
-  ];
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000); // Change slide every 5 seconds
+    }, 5000);
     return () => clearInterval(timer);
   }, []);
 

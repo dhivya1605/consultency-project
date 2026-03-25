@@ -171,12 +171,18 @@ const createProduct = async (req, res) => {
     });
 
     // body fields may come from multipart/form-data
-    const { name, description, price, category, brand, image, specifications, externalSource, stock, warranty } = req.body;
+    const { 
+      name, description, price, category, brand, image, 
+      specifications, externalSource, stock, warranty,
+      hasOffer, offerPercentage, offerExpiry, applyTo
+    } = req.body;
 
     // Convert string values from FormData to proper types
     const parsedPrice = parseFloat(price);
     const parsedStock = parseInt(stock, 10) || 0;
     const parsedWarranty = parseInt(warranty, 10) || 0;
+    const parsedHasOffer = hasOffer === 'true' || hasOffer === true;
+    const parsedOfferPercentage = parseFloat(offerPercentage) || 0;
     
     let parsedSpecifications = specifications;
     if (typeof specifications === 'string') {
@@ -225,11 +231,28 @@ const createProduct = async (req, res) => {
       externalSource,
       stock: parsedStock,
       warranty: parsedWarranty,
-      visible: req.body.visible !== undefined ? req.body.visible : true
+      visible: req.body.visible !== undefined ? (req.body.visible === 'true' || req.body.visible === true) : true,
+      hasOffer: parsedHasOffer,
+      offerPercentage: parsedOfferPercentage,
+      offerExpiry: offerExpiry ? new Date(offerExpiry) : undefined
     });
 
     console.log('Product object created:', product);
     await product.save();
+
+    // If applyTo is specified (multi-select), apply the same offer to those product IDs
+    if (applyTo && Array.isArray(JSON.parse(applyTo)) && JSON.parse(applyTo).length > 0) {
+      const applyToIds = JSON.parse(applyTo);
+      console.log('Applying offer to multiple products:', applyToIds);
+      await Product.updateMany(
+        { _id: { $in: applyToIds } },
+        { 
+          hasOffer: parsedHasOffer, 
+          offerPercentage: parsedOfferPercentage, 
+          offerExpiry: offerExpiry ? new Date(offerExpiry) : undefined 
+        }
+      );
+    }
     console.log('Product saved successfully:', product._id);
     res.status(201).json({ message: 'Product created', product });
   } catch (error) {
@@ -265,6 +288,18 @@ const updateProduct = async (req, res) => {
       updates.visible = updates.visible === 'true' || updates.visible === true;
     }
 
+    if (updates.hasOffer !== undefined) {
+      updates.hasOffer = updates.hasOffer === 'true' || updates.hasOffer === true;
+    }
+
+    if (updates.offerPercentage !== undefined) {
+      updates.offerPercentage = parseFloat(updates.offerPercentage);
+    }
+
+    if (updates.offerExpiry !== undefined && updates.offerExpiry !== '') {
+      updates.offerExpiry = new Date(updates.offerExpiry);
+    }
+
     if (updates.specifications !== undefined && typeof updates.specifications === 'string') {
       try {
         updates.specifications = JSON.parse(updates.specifications);
@@ -291,6 +326,21 @@ const updateProduct = async (req, res) => {
     );
     console.log('updateProduct result', product);
 
+    // If applyTo is specified in update, it might mean the user wants to propagate this offer to others
+    if (req.body.applyTo && Array.isArray(JSON.parse(req.body.applyTo)) && JSON.parse(req.body.applyTo).length > 0) {
+      const applyToIds = JSON.parse(req.body.applyTo);
+      const offerUpdate = {
+        hasOffer: updates.hasOffer,
+        offerPercentage: updates.offerPercentage,
+        offerExpiry: updates.offerExpiry
+      };
+      console.log('Applying updated offer to multiple products:', applyToIds);
+      await Product.updateMany(
+        { _id: { $in: applyToIds } },
+        offerUpdate
+      );
+    }
+
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
     }
@@ -315,6 +365,60 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// Bulk update offers (Admin only)
+const bulkUpdateOffer = async (req, res) => {
+  try {
+    const { productIds, offerPercentage, offerExpiry } = req.body;
+
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ message: 'No products selected' });
+    }
+
+    const updateData = {
+      hasOffer: true,
+      offerPercentage: parseFloat(offerPercentage) || 0,
+      offerExpiry: offerExpiry ? new Date(offerExpiry) : undefined,
+      updatedAt: Date.now()
+    };
+
+    await Product.updateMany(
+      { _id: { $in: productIds } },
+      { $set: updateData }
+    );
+
+    res.json({ message: `Offer updated for ${productIds.length} products` });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to update bulk offers', error: error.message });
+  }
+};
+
+// Bulk remove offers (Admin only)
+const bulkRemoveOffer = async (req, res) => {
+  try {
+    const { productIds } = req.body;
+
+    if (!Array.isArray(productIds) || productIds.length === 0) {
+      return res.status(400).json({ message: 'No products selected' });
+    }
+
+    await Product.updateMany(
+      { _id: { $in: productIds } },
+      { 
+        $set: { 
+          hasOffer: false, 
+          offerPercentage: 0, 
+          offerExpiry: undefined,
+          updatedAt: Date.now()
+        } 
+      }
+    );
+
+    res.json({ message: `Offer removed from ${productIds.length} products` });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to remove bulk offers', error: error.message });
+  }
+};
+
 module.exports = {
   getAllProducts,
   getProductById,
@@ -322,5 +426,7 @@ module.exports = {
   getProductsByCategory,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  bulkUpdateOffer,
+  bulkRemoveOffer
 };

@@ -32,7 +32,11 @@ const AdminProducts = () => {
     brand: '',
     stock: '',
     warranty: '',
-    specifications: {}
+    specifications: {},
+    hasOffer: false,
+    offerPercentage: '',
+    offerExpiry: '',
+    applyTo: []
   });
   const [imageFile, setImageFile] = useState(null);
   const [error, setError] = useState('');
@@ -43,6 +47,14 @@ const AdminProducts = () => {
   const [categoryError, setCategoryError] = useState('');
   const [brandError, setBrandError] = useState('');
   const [specErrors, setSpecErrors] = useState({});
+  const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [offerModalData, setOfferModalData] = useState({
+    productIds: [],
+    offerPercentage: '',
+    offerExpiry: '',
+    isBulk: false
+  });
 
   // Get available brands based on selected category
   const availableBrands = form.category ? (CATEGORY_BRAND_MAP[form.category] || []) : [];
@@ -113,6 +125,17 @@ const AdminProducts = () => {
       setBrandError('');
     } else if (name === 'brand') {
       setBrandError(value ? '' : 'Brand is required');
+      setForm(prev => ({ ...prev, [name]: value }));
+    } else if (name === 'hasOffer') {
+      setForm(prev => ({ ...prev, [name]: e.target.checked }));
+    } else if (name === 'applyTo') {
+      const options = e.target.options;
+      const value = [];
+      for (let i = 0, l = options.length; i < l; i++) {
+        if (options[i].selected) {
+          value.push(options[i].value);
+        }
+      }
       setForm(prev => ({ ...prev, [name]: value }));
     } else {
       setForm(prev => ({ ...prev, [name]: value }));
@@ -330,6 +353,12 @@ const AdminProducts = () => {
           data.append('specifications', JSON.stringify(form.specifications));
         }
         data.append('image', imageFile);
+        data.append('hasOffer', form.hasOffer);
+        data.append('offerPercentage', form.offerPercentage);
+        data.append('offerExpiry', form.offerExpiry);
+        if (form.applyTo && form.applyTo.length > 0) {
+          data.append('applyTo', JSON.stringify(form.applyTo));
+        }
       } else {
         // For edits without new image
         data = {
@@ -340,7 +369,11 @@ const AdminProducts = () => {
           brand: form.brand,
           stock: form.stock,
           warranty: form.warranty,
-          specifications: form.specifications
+          specifications: form.specifications,
+          hasOffer: form.hasOffer,
+          offerPercentage: form.offerPercentage,
+          offerExpiry: form.offerExpiry,
+          applyTo: form.applyTo && form.applyTo.length > 0 ? JSON.stringify(form.applyTo) : undefined
         };
       }
 
@@ -362,7 +395,11 @@ const AdminProducts = () => {
         brand: '',
         stock: '',
         warranty: '',
-        specifications: {}
+        specifications: {},
+        hasOffer: false,
+        offerPercentage: '',
+        offerExpiry: '',
+        applyTo: []
       });
       setImageFile(null);
       setShowForm(false);
@@ -386,7 +423,11 @@ const AdminProducts = () => {
       brand: product.brand,
       stock: product.stock,
       warranty: product.warranty !== undefined ? product.warranty : '',
-      specifications: product.specifications || {}
+      specifications: product.specifications || {},
+      hasOffer: product.hasOffer || false,
+      offerPercentage: product.offerPercentage || '',
+      offerExpiry: product.offerExpiry ? new Date(product.offerExpiry).toISOString().split('T')[0] : '',
+      applyTo: []
     });
     setSpecErrors({});
     setImageFile(null);
@@ -424,6 +465,86 @@ const AdminProducts = () => {
     }
   };
 
+  const handleSelectProduct = (productId) => {
+    setSelectedProductIds(prev => 
+      prev.includes(productId) 
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedProductIds.length === filteredProducts.length) {
+      setSelectedProductIds([]);
+    } else {
+      setSelectedProductIds(filteredProducts.map(p => p._id));
+    }
+  };
+
+  const openBulkOfferModal = () => {
+    if (selectedProductIds.length === 0) {
+      alert('Please select products first');
+      return;
+    }
+    setOfferModalData({
+      productIds: selectedProductIds,
+      offerPercentage: '',
+      offerExpiry: '',
+      isBulk: true
+    });
+    setShowOfferModal(true);
+  };
+
+  const handleBulkRemoveOffer = async () => {
+    if (selectedProductIds.length === 0) {
+      alert('Please select products first');
+      return;
+    }
+    if (window.confirm(`Are you sure you want to remove offers from ${selectedProductIds.length} products?`)) {
+      try {
+        await apiCall.post('/products/bulk-remove-offer', 
+          { productIds: selectedProductIds },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        alert('✅ Offers removed successfully!');
+        setSelectedProductIds([]);
+        fetchProducts();
+      } catch (err) {
+        alert('❌ Failed to remove bulk offers');
+      }
+    }
+  };
+
+  const handleQuickOfferEdit = (product) => {
+    setOfferModalData({
+      productIds: [product._id],
+      offerPercentage: product.offerPercentage || '',
+      offerExpiry: product.offerExpiry ? new Date(product.offerExpiry).toISOString().split('T')[0] : '',
+      isBulk: false
+    });
+    setShowOfferModal(true);
+  };
+
+  const handleSaveOfferModal = async (e) => {
+    e.preventDefault();
+    try {
+      await apiCall.post('/products/bulk-offer', 
+        { 
+          productIds: offerModalData.productIds,
+          offerPercentage: offerModalData.offerPercentage,
+          offerExpiry: offerModalData.offerExpiry
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert('✅ Offer updated successfully!');
+      setShowOfferModal(false);
+      setSelectedProductIds([]);
+      fetchProducts();
+    } catch (err) {
+      alert('❌ Failed to update offer');
+    }
+  };
+
   const handleCancel = () => {
     setShowForm(false);
     setEditingId(null);
@@ -436,7 +557,11 @@ const AdminProducts = () => {
       brand: '',
       stock: '',
       warranty: '',
-      specifications: {}
+      specifications: {},
+      hasOffer: false,
+      offerPercentage: '',
+      offerExpiry: '',
+      applyTo: []
     });
     setSpecErrors({});
     setImageFile(null);
@@ -471,6 +596,16 @@ const AdminProducts = () => {
           + Add New Product
         </button>
       </div>
+
+      {(selectedProductIds.length > 0) && (
+        <div className="bulk-actions-bar animate-fade-in">
+          <span className="selected-count">{selectedProductIds.length} product(s) selected</span>
+          <div className="bulk-buttons">
+            <button onClick={openBulkOfferModal} className="bulk-btn add-offer-bulk">🎯 Add Offer</button>
+            <button onClick={handleBulkRemoveOffer} className="bulk-btn remove-offer-bulk">❌ Remove Offer</button>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <>
@@ -687,6 +822,76 @@ const AdminProducts = () => {
                   </div>
                 </div>
 
+                <div className="form-group offer-section" style={{ backgroundColor: '#f8f9fa', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e9ecef', marginBottom: '1.5rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: '#2c3e50', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '1.4rem' }}>🏷️</span> Offer Settings
+                  </h3>
+                  
+                  <div className="toggle-switch-container" style={{ marginBottom: '1rem' }}>
+                    <label className="switch">
+                      <input
+                        type="checkbox"
+                        name="hasOffer"
+                        checked={form.hasOffer}
+                        onChange={(e) => setForm(prev => ({ ...prev, hasOffer: e.target.checked }))}
+                      />
+                      <span className="slider round"></span>
+                    </label>
+                    <span style={{ marginLeft: '10px', fontWeight: '600', color: form.hasOffer ? '#4CAF50' : '#666' }}>
+                      {form.hasOffer ? 'Offer Active' : 'No Offer'}
+                    </span>
+                  </div>
+
+                  {form.hasOffer && (
+                    <div className="offer-details animate-fade-in">
+                      <div className="form-row">
+                        <div className="form-group">
+                          <label>Offer Percentage (%) *</label>
+                          <input
+                            type="number"
+                            name="offerPercentage"
+                            placeholder="e.g., 20"
+                            value={form.offerPercentage}
+                            onChange={handleChange}
+                            min="0"
+                            max="100"
+                            required={form.hasOffer}
+                          />
+                        </div>
+                        <div className="form-group">
+                          <label>Expiry Date</label>
+                          <input
+                            type="date"
+                            name="offerExpiry"
+                            value={form.offerExpiry}
+                            onChange={handleChange}
+                            min={new Date().toISOString().split('T')[0]}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Apply Offer To Other Products (Optional)</label>
+                        <select
+                          multiple
+                          name="applyTo"
+                          value={form.applyTo}
+                          onChange={handleChange}
+                          className="multi-select"
+                          style={{ height: '120px' }}
+                        >
+                          {products.filter(p => !editingId || p._id !== editingId).map(p => (
+                            <option key={p._id} value={p._id}>
+                              {p.name} (₹{p.price})
+                            </option>
+                          ))}
+                        </select>
+                        <small className="hint">Hold Ctrl (Cmd) to select multiple products.</small>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="form-group">
                   <label>Product Image * {imageFile && <span className="file-name">({imageFile.name})</span>}</label>
                   <div className="file-upload-box">
@@ -747,6 +952,47 @@ const AdminProducts = () => {
         </div>
       </div>
 
+      {showOfferModal && (
+        <>
+          <div className="modal-backdrop" onClick={() => setShowOfferModal(false)}></div>
+          <div className="modal-container">
+            <div className="modal-content mini-modal">
+              <div className="modal-header header-mini">
+                <h3>{offerModalData.isBulk ? `Apply Offer to ${offerModalData.productIds.length} Products` : 'Edit Offer'}</h3>
+                <button className="modal-close" onClick={() => setShowOfferModal(false)}>✕</button>
+              </div>
+              <form onSubmit={handleSaveOfferModal} className="offer-quick-form">
+                <div className="form-group">
+                  <label>Offer Percentage (%)</label>
+                  <input
+                    type="number"
+                    value={offerModalData.offerPercentage}
+                    onChange={(e) => setOfferModalData(prev => ({ ...prev, offerPercentage: e.target.value }))}
+                    min="0"
+                    max="100"
+                    required
+                    placeholder="e.g. 20"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Expiry Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={offerModalData.offerExpiry}
+                    onChange={(e) => setOfferModalData(prev => ({ ...prev, offerExpiry: e.target.value }))}
+                    min={new Date().toISOString().split('T')[0]}
+                  />
+                </div>
+                <div className="modal-footer-mini">
+                  <button type="submit" className="save-btn">Apply Offer</button>
+                  <button type="button" onClick={() => setShowOfferModal(false)} className="cancel-btn">Cancel</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </>
+      )}
+
       {loading ? (
         <p className="loading">Loading products...</p>
       ) : filteredProducts.length === 0 ? (
@@ -756,9 +1002,17 @@ const AdminProducts = () => {
           <table className="products-table">
             <thead>
               <tr>
+                <th style={{ width: '40px' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={selectedProductIds.length === filteredProducts.length && filteredProducts.length > 0} 
+                    onChange={handleSelectAll}
+                  />
+                </th>
                 <th>Product Name</th>
                 <th>Category</th>
                 <th>Price</th>
+                <th>Offer</th>
                 <th>Stock</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -767,9 +1021,28 @@ const AdminProducts = () => {
             <tbody>
               {filteredProducts.map(product => (
                 <tr key={product._id} className={!product.visible ? 'hidden-row' : ''}>
+                  <td>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedProductIds.includes(product._id)} 
+                      onChange={() => handleSelectProduct(product._id)}
+                    />
+                  </td>
                   <td className="product-name">{product.name}</td>
                   <td>{product.category}</td>
                   <td className="price">₹{product.price.toLocaleString('en-IN')}</td>
+                  <td className="offer-col">
+                    {product.hasOffer ? (
+                      <div className="offer-inline-display" onClick={() => handleQuickOfferEdit(product)}>
+                        <span className="offer-badge-admin">{product.offerPercentage}% OFF</span>
+                        <span className="edit-icon-small">✏️</span>
+                      </div>
+                    ) : (
+                      <button className="add-offer-btn-small" onClick={() => handleQuickOfferEdit(product)}>
+                        + Add
+                      </button>
+                    )}
+                  </td>
                   <td className="stock">
                     <span className={product.stock < 5 ? 'low-stock' : ''}>
                       {product.stock}

@@ -8,7 +8,9 @@ const {
   getProductsByCategory,
   createProduct,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  bulkUpdateOffer,
+  bulkRemoveOffer
 } = require('../controllers/productController');
 const authMiddleware = require('../middleware/authMiddleware');
 const adminMiddleware = require('../middleware/adminMiddleware');
@@ -36,6 +38,10 @@ router.put('/:id',
 );
 
 router.delete('/:id', authMiddleware, adminMiddleware, deleteProduct);
+
+// Bulk offer routes
+router.post('/bulk-offer', authMiddleware, adminMiddleware, bulkUpdateOffer);
+router.post('/bulk-remove-offer', authMiddleware, adminMiddleware, bulkRemoveOffer);
 
 // Error handling middleware for multer (must be at the end)
 const upload_module = require('../middleware/upload');

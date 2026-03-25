@@ -308,7 +308,7 @@ body {
 }
 
 .navbar-logo {
-  font-size: 2.8rem;
+  font-size: 5.8rem;
   /* Even bigger as requested */
   font-weight: 800;
   text-decoration: none;
@@ -5606,4 +5606,140 @@ body {
   .conf-shop-btn {
     width: 100%;
   }
+}
+
+/* Product Offer Styles */
+.product-price-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 0.5rem;
+  gap: 2px;
+}
+
+.original-price {
+  font-size: 0.9rem;
+  color: #888;
+  text-decoration: line-through;
+}
+
+.discounted-price {
+  font-size: 1.25rem;
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.regular-price {
+  font-size: 1.2rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.offer-badge-mini {
+  background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-top: 4px;
+  box-shadow: 0 2px 4px rgba(255, 65, 108, 0.3);
+}
+
+/* Product Detail Offer Styles */
+.offer-price-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.original-price-detail {
+  font-size: 1.1rem;
+  color: #888;
+  text-decoration: line-through;
+}
+
+.discounted-price-detail {
+  font-size: 2.2rem;
+  color: #e74c3c;
+  font-weight: 700;
+  margin: 0;
+}
+
+.offer-badge-detail {
+  display: inline-block;
+  background: #e74c3c;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  width: fit-content;
+  margin-top: 0.5rem;
+}
+
+.savings-text {
+  color: #2e7d32;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Admin Offer Badge */
+.offer-badge-admin {
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.no-offer-text {
+  color: #999;
+  font-style: italic;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Cart Savings Styles */
+.cart-item-price-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.cart-original-price {
+  font-size: 0.9rem;
+  color: #888;
+  text-decoration: line-through;
+}
+
+.cart-discounted-price {
+  font-size: 1.1rem;
+  color: #e74c3c;
+  font-weight: bold;
+}
+
+.cart-item-offer-badge {
+  background: #ffebee;
+  color: #c62828;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.savings-line {
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.savings-line span:last-child {
+  color: #2e7d32;
 }

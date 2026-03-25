@@ -14,18 +14,9 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    fetchProductDetail();
-    fetchReviews();
-    if (user) {
-
-      fetchUserOrders();
-    }
-  }, [id, user]);
-
-  const fetchProductDetail = async () => {
+  const fetchProductDetail = React.useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/products/${id}`);
+      const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/products/${id}`);
       const data = await response.json();
       setProduct(data);
     } catch (error) {
@@ -33,34 +24,34 @@ const ProductDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
 
-  const fetchReviews = async () => {
+  const fetchReviews = React.useCallback(async () => {
     try {
       const response = await apiCall.get(`/ratings/product/${id}`);
       setReviews(response.data.reviews || []);
     } catch (error) {
       console.error('Failed to fetch reviews:', error);
     }
-  };
+  }, [id]);
 
-  const fetchUserOrders = async () => {
+  const fetchUserOrders = React.useCallback(async () => {
     try {
-      const response = await apiCall.get('/orders', {
+      await apiCall.get('/orders', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const orders = response.data || [];
-      // setUserOrders(orders);
-      
-      // Check if user has ordered this product
-      const hasOrderedProduct = orders.some(order =>
-        order.items && order.items.some(item => item.productId === id || item.productId === parseInt(id))
-      );
-      // setHasOrdered(hasOrderedProduct);
     } catch (error) {
       console.error('Failed to fetch user orders:', error);
     }
-  };
+  }, [token]);
+
+  React.useEffect(() => {
+    fetchProductDetail();
+    fetchReviews();
+    if (user) {
+      fetchUserOrders();
+    }
+  }, [fetchProductDetail, fetchReviews, fetchUserOrders, user]);
 
   const handleAddToCart = async () => {
     if (!user) {
@@ -70,7 +61,10 @@ const ProductDetail = () => {
     }
 
     try {
-      await addToCart(product._id, quantity, product.price);
+      const finalPrice = product.hasOffer 
+        ? product.price - (product.price * product.offerPercentage / 100) 
+        : product.price;
+      await addToCart(product._id, quantity, finalPrice);
       alert('✅ Product added to cart!');
       navigate('/cart');
     } catch (error) {
@@ -126,7 +120,16 @@ const ProductDetail = () => {
           </div>
 
           <div className="detail-price">
-            <h2>{product.price?.toLocaleString('en-IN') || 0}</h2>
+            {product.hasOffer ? (
+              <div className="offer-price-container">
+                <span className="original-price-detail">₹{product.price.toLocaleString('en-IN')}</span>
+                <h2 className="discounted-price-detail">₹{(product.price - (product.price * product.offerPercentage / 100)).toLocaleString('en-IN')}</h2>
+                <span className="offer-badge-detail">{product.offerPercentage}% OFF</span>
+                <p className="savings-text">You save ₹{(product.price * product.offerPercentage / 100).toLocaleString('en-IN')}!</p>
+              </div>
+            ) : (
+              <h2>₹{product.price?.toLocaleString('en-IN') || 0}</h2>
+            )}
           </div>
 
           {/* Product Specifications Section */}

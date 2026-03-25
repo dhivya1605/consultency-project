@@ -3,7 +3,7 @@ const Product = require('../models/Product');
 const User = require('../models/User');
 const axios = require('axios');
 
-const ML_API_URL = process.env.ML_API_URL || 'http://localhost:8000';
+const ML_API_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
 
 // Get sales analytics
 const getSalesAnalytics = async (req, res) => {
@@ -161,7 +161,7 @@ const getSalesReport = async (req, res) => {
 
     try {
       // Get sales prediction from ML API (Python Flask service on port 8000)
-      const predictionResponse = await axios.post(`http://127.0.0.1:8000/api/sales-prediction`, {
+      const predictionResponse = await axios.post(`${ML_API_URL}/api/sales-prediction`, {
         salesData: allOrders
       });
       prediction = predictionResponse.data;
@@ -213,13 +213,13 @@ const getSalesReport = async (req, res) => {
 const getAllUsersWithOrders = async (req, res) => {
   try {
     const users = await User.find({ role: 'user' }).select('-password');
-    
+
     const usersWithOrders = await Promise.all(
       users.map(async (user) => {
         const orders = await Order.find({ userId: user._id })
           .populate('items.productId', 'name price')
           .sort({ orderDate: -1 });
-        
+
         return {
           ...user.toObject(),
           orders,
